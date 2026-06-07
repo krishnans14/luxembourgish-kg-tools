@@ -799,7 +799,7 @@ function playLodAudio() {
     }
   }
 
-  const url = `https://lod.lu/uploads/AAC/${lodId}.m4a`;
+  const url = `https://lod.lu/uploads/AAC/${lodId.normalize('NFD').replace(/[̀-ͯ]/g, '')}.m4a`;
   _currentAudio = new Audio(url);
   popAudio.dataset.state = 'loading';
 
