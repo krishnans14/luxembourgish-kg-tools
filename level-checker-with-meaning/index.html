@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="lb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lëtzebuergeschen Niveaupréifer a Bedeitungen</title>
+<!-- worddata.js always loaded; dictdata.js loaded lazily when meanings are enabled -->
+<script src="worddata.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #f5f2eb;
+    --surface:    #faf8f3;
+    --border:     #ddd8cc;
+    --text:       #1a1a18;
+    --muted:      #6b6860;
+    --accent:     #2a5c3f;
+    --accent-lt:  #e8f2ec;
+    --flag-a1:    #2a5c3f;
+    --flag-a1-bg: #e8f2ec;
+    --flag-a2:    #1a4a7a;
+    --flag-a2-bg: #e8f0fa;
+    --flag-adv:   #c45c00;
+    --flag-adv-bg:#fff3e8;
+    --flag-unk:   #b02020;
+    --flag-unk-bg:#fdecea;
+    --mono:       'DM Mono', monospace;
+    --serif:      'Source Serif 4', Georgia, serif;
+  }
+
+  body {
+    font-family: var(--serif);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  header {
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: 2.5rem;
+  }
+
+  .flag-strip {
+    display: flex;
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    gap: 2px;
+  }
+  .flag-strip span { flex: 1; }
+  .flag-strip .red   { background: #ef3340; }
+  .flag-strip .white { background: #ffffff; border: 1px solid var(--border); }
+  .flag-strip .blue  { background: #009fda; }
+
+  h1 {
+    font-size: 1.9rem;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .subtitle {
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 680px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Controls row */
+  .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .level-row { display: flex; align-items: center; gap: 0.75rem; }
+  .level-label {
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .level-btn {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.3rem 0.9rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+  .level-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .level-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+
+  .lang-row { display: flex; align-items: center; gap: 0.75rem; }
+  .lang-btn {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .lang-btn.active { background: #1a4a7a; color: #fff; border-color: #1a4a7a; }
+  .lang-btn:not(.active):hover { border-color: #1a4a7a; color: #1a4a7a; }
+
+  /* Feature toggles */
+  .feat-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .feat-btn {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    padding: 0.28rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 0.35rem;
+  }
+  .feat-btn::before { content: '○'; font-size: 0.65rem; }
+  .feat-btn.active {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+  .feat-btn.active::before { content: '●'; color: var(--accent); }
+  .feat-btn:hover { border-color: var(--accent); }
+
+  textarea {
+    width: 100%;
+    height: 160px;
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus { border-color: var(--accent); }
+
+  .check-btn {
+    margin-top: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.6rem 1.4rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .check-btn:hover  { opacity: 0.88; }
+  .check-btn:active { transform: scale(0.98); }
+  .check-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .loading {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  /* Results */
+  #results { display: none; }
+
+  .stats-bar-wrap { margin-bottom: 0.75rem; }
+  .stats-bar {
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 0.4rem;
+  }
+  .bar-ok  { background: #5a9e6f; }
+  .bar-adv { background: #e8924a; }
+  .bar-unk { background: #d05050; }
+  .stats-text {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .stats-text .ok  { color: var(--accent); }
+  .stats-text .adv { color: var(--flag-adv); }
+  .stats-text .unk { color: var(--flag-unk); }
+
+  .legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .output-text {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    line-height: 1.9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding: 1rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    position: relative;
+  }
+
+  /* Token styles */
+  .tok {
+    border-radius: 3px;
+    padding: 0 2px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .tok:not(.tok-no-click):hover { filter: brightness(0.92); }
+  .tok-no-click { cursor: default; }
+
+  /* Known words get a subtle underline on hover when dictionary is loaded */
+  .tok-ok {
+    border-bottom: 1px dotted transparent;
+    transition: border-color 0.15s;
+  }
+  .tok-ok:hover { border-bottom-color: var(--accent); }
+
+  .tok-adv {
+    background: var(--flag-adv-bg);
+    color: var(--flag-adv);
+  }
+  .tok-unk {
+    background: var(--flag-unk-bg);
+    color: var(--flag-unk);
+    text-decoration: underline dotted;
+  }
+
+  /* Flagged list */
+  .flagged-section { margin-top: 1rem; }
+  .flagged-title {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .flagged-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+  }
+  .chip-adv { background: var(--flag-adv-bg); color: var(--flag-adv); }
+  .chip-unk { background: var(--flag-unk-bg); color: var(--flag-unk); }
+
+  /* ── Meaning popover ──────────────────────────────────────────────────── */
+  #popover {
+    position: fixed;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    padding: 0.85rem 1rem;
+    width: 272px;        /* fixed width — consistent across all words */
+    font-family: var(--serif);
+    display: none;
+    animation: popIn 0.12s ease;
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .pop-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.45rem;
+  }
+  .pop-lemma {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .pop-pos {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .pop-level {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .pop-level-a1 { background: var(--flag-a1-bg); color: var(--flag-a1); }
+  .pop-level-a2 { background: var(--flag-a2-bg); color: var(--flag-a2); }
+  .pop-level-adv { background: var(--flag-adv-bg); color: var(--flag-adv); }
+  .pop-level-unk { background: var(--flag-unk-bg); color: var(--flag-unk); }
+
+  .pop-lang-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+  .meaning-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .meaning-list li {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text);
+    padding: 0.2rem 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0.4rem;
+    align-items: baseline;
+  }
+  .meaning-list li:last-child { border-bottom: none; }
+  .meaning-num {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    min-width: 1rem;
+    flex-shrink: 0;
+  }
+  .meaning-more-btn {
+    display: block;
+    width: 100%;
+    margin-top: 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    padding-top: 0.4rem;
+    cursor: pointer;
+    text-align: left;
+    letter-spacing: 0.03em;
+  }
+  .meaning-more-btn:hover { text-decoration: underline; }
+  .pop-no-meaning {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .pop-close {
+    position: absolute;
+    top: 0.5rem; right: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    background: none; border: none; padding: 0;
+  }
+  .pop-close:hover { color: var(--text); }
+
+  .pop-audio-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(42,92,63,0.35);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    padding: 0;
+  }
+  .pop-audio-btn:hover   { background: #1f4a30; box-shadow: 0 3px 8px rgba(42,92,63,0.4); }
+  .pop-audio-btn:active  { transform: scale(0.94); }
+  .pop-audio-btn[data-state="playing"] { background: #1f4a30; box-shadow: 0 0 0 3px rgba(42,92,63,0.25); }
+  .pop-audio-btn[data-state="loading"] { opacity: 0.6; cursor: wait; }
+  .pop-audio-btn[data-state="error"]   { background: var(--flag-unk); box-shadow: none; }
+
+  footer {
+    margin-top: 3rem;
+    font-size: 0.75rem;
+    font-family: var(--mono);
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.8;
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="flag-strip">
+    <span class="red"></span>
+    <span class="white"></span>
+    <span class="blue"></span>
+  </div>
+  <h1>Lëtzebuergeschen <em>Niveaupréifer</em> a Bedeitungen</em></h1>
+  <p class="subtitle"> <img width="20" src="https://flagcdn.com/w80/lu.png" srcset="https://flagcdn.com/w160/lu.png 2x" alt="LU Flag"> Préif ob däin Text am richtegen Niveauberäich bleift. Klick op e Wuert op Niveau A1/A2 fir d'Bedeitung ze gesinn an d'Aussprooch ze lauschteren.</p>
+  <p class="subtitle"> <img width="20" src="https://flagcdn.com/w80/gb.png" srcset="https://flagcdn.com/w160/gb.png 2x" alt="UK Flag"> Check if your text is within the chosen level. Click on the word at level A1/A2 to see its translation and listen to the pronunciation</p>
+  <p class="subtitle"> <img width="20" src="https://flagcdn.com/w80/fr.png" srcset="https://flagcdn.com/w160/fr.png 2x" alt="France Flag"> Vérifiez si votre texte correspond au niveau choisi. Cliquez sur le mot de niveau A1/A2 pour voir sa traduction et écouter sa prononciation</p>
+</header>
+
+<div class="card">
+  <div class="controls-row">
+    <div class="level-row">
+      <span class="level-label">Niveau</span>
+      <button class="level-btn active" data-level="a1">A1</button>
+      <button class="level-btn"        data-level="a2">A2</button>
+    </div>
+    <div class="lang-row">
+      <span class="level-label">Bedeitung</span>
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn"        data-lang="fr">FR</button>
+    </div>
+  </div>
+
+  <div class="feat-row" style="margin-bottom:1rem">
+    <span class="level-label">Funktiounen</span>
+    <button class="feat-btn active" data-feat="levels">Niveaucheck</button>
+    <button class="feat-btn active" data-feat="meanings">Bedeitungen</button>
+    <button class="feat-btn active" data-feat="audio">Audio</button>
+  </div>
+
+  <textarea id="input"
+    placeholder="Schreif hei däin Text op Lëtzebuergesch…&#10;&#10;Beispill: Ech sinn e Schüler. Mäi Papp schafft an der Stad."
+    spellcheck="false"></textarea>
+
+  <button class="check-btn" id="checkBtn">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+      <line x1="9.5" y1="9.5" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    Iwwerpréiwen/Check
+  </button>
+  <div class="loading" id="loadingMsg" style="display:none">Wuertlëschten ginn gelueden…</div>
+</div>
+
+<div class="card" id="results">
+  <div class="stats-bar-wrap">
+    <div class="stats-bar">
+      <div class="bar-ok"  id="barOk"></div>
+      <div class="bar-adv" id="barAdv"></div>
+      <div class="bar-unk" id="barUnk"></div>
+    </div>
+    <div class="stats-text" id="statsText"></div>
+  </div>
+
+  <div class="legend">
+    <span>
+      <span class="legend-dot" style="background:var(--flag-adv-bg);border:1px solid var(--flag-adv)"></span>
+      <span style="color:var(--flag-adv)">Wuert iwwer dem Niveau</span>
+    </span>
+    <span>
+      <span class="legend-dot" style="background:var(--flag-unk-bg);border:1px solid var(--flag-unk)"></span>
+      <span style="color:var(--flag-unk)">Wuert net erkannt</span>
+    </span>
+  </div>
+
+  <div class="output-text" id="outputText"></div>
+
+  <div id="flaggedSection" class="flagged-section" style="display:none">
+    <div id="advSection"></div>
+    <div id="unkSection"></div>
+  </div>
+</div>
+
+<!-- Meaning popover (shared, moved around via JS) -->
+<div id="popover">
+  <button class="pop-close" id="popClose">✕</button>
+  <div class="pop-header">
+    <span class="pop-lemma" id="popLemma"></span>
+    <span class="pop-pos"   id="popPos"></span>
+    <span class="pop-level" id="popLevel"></span>
+    <button class="pop-audio-btn" id="popAudio" title="Play pronunciation" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </button>
+  </div>
+  <div id="popBody"></div>
+</div>
+
+<footer>
+  Daten: <a href="https://lod.lu" target="_blank">LOD</a> (CC0) ·
+  <a href="https://zls.lu" target="_blank">Zenter fir d'Lëtzebuerger Sprooch</a>
+</footer>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+const WORDS      = { a1: null, a2: null };
+let DICT         = null;
+let currentLevel = 'a1';
+let currentLang  = 'en';
+let loaded       = false;
+
+// ── Feature flags ─────────────────────────────────────────────────────────────
+const FEAT = { levels: true, meanings: true, audio: true };
+let dictLoading = false;
+let dictLoaded  = false;
+
+// ── Lazy-load dictdata.js (only when meanings feature is on) ──────────────────
+function loadDictData() {
+  if (dictLoaded || dictLoading) return;
+  dictLoading = true;
+  const script = document.createElement('script');
+  script.src = 'dictdata.js';
+  script.onload = () => {
+    if (window.DICTDATA) DICT = window.DICTDATA;
+    dictLoaded = true; dictLoading = false;
+  };
+  script.onerror = () => { dictLoaded = true; dictLoading = false; };
+  document.head.appendChild(script);
+}
+
+// ── Load word lists on startup ────────────────────────────────────────────────
+async function loadData() {
+  if (window.WORDDATA) {
+    WORDS.a1 = new Set(window.WORDDATA.a1);
+    WORDS.a2 = new Set(window.WORDDATA.a2);
+    loaded = true;
+  } else {
+    try {
+      const [r1, r2] = await Promise.all([fetch('a1_words.json'), fetch('a2_words.json')]);
+      WORDS.a1 = new Set(await r1.json());
+      WORDS.a2 = new Set(await r2.json());
+      loaded = true;
+    } catch {
+      WORDS.a1 = new Set(['ech','du','hien','hatt','si','mir','dir','sinn','ass',
+                          'hunn','den','dem',"d'",'de','déi','dat','eng','een',
+                          'keng','net','och','nach','jo','nee','an','mee']);
+      WORDS.a2 = new Set([...WORDS.a1]);
+      loaded = true;
+    }
+  }
+
+  // Only load dictionary if meanings feature is on
+  if (FEAT.meanings) loadDictData();
+
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('checkBtn').disabled = false;
+}
+
+loadData();
+
+// ── Level / language buttons ──────────────────────────────────────────────────
+document.querySelectorAll('.level-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLevel = btn.dataset.level;
+  });
+});
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLang = btn.dataset.lang;
+  });
+});
+
+// ── Feature toggles ───────────────────────────────────────────────────────────
+document.querySelectorAll('.feat-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const feat = btn.dataset.feat;
+    FEAT[feat] = !FEAT[feat];
+    btn.classList.toggle('active', FEAT[feat]);
+    // Lazily load dictionary the first time meanings is switched on
+    if (feat === 'meanings' && FEAT.meanings) loadDictData();
+  });
+});
+
+// ── Tokenizer ─────────────────────────────────────────────────────────────────
+function tokenize(text) {
+  const tokens = [];
+  const raw = text.split(/(\s+)/);
+
+  for (const chunk of raw) {
+    if (/^\s+$/.test(chunk)) {
+      tokens.push({ text: chunk, isWord: false, isClitic: false });
+      continue;
+    }
+    if (!chunk) continue;
+
+    const norm = chunk.replace(/’/g, "'");
+
+    if (norm.includes("'")) {
+      const parts = norm.split("'");
+      parts.forEach((part, i) => {
+        const m = part.match(/^([.,;:!?"()[\]{}«»\-–—]*)(.*?)([.,;:!?"()[\]{}«»\-–—]*)$/);
+        if (!m) return;
+        const [, lead, word, trail] = m;
+        if (lead)  tokens.push({ text: lead,  isWord: false, isClitic: false });
+        if (i < parts.length - 1) {
+          if (word) tokens.push({ text: word + "'", isWord: true, isClitic: true });
+        } else {
+          if (word) tokens.push({ text: word, isWord: true, isClitic: false });
+        }
+        if (trail) tokens.push({ text: trail, isWord: false, isClitic: false });
+      });
+    } else {
+      const m = norm.match(/^([.,;:!?"()[\]{}«»\-–—]*)(.*?)([.,;:!?"()[\]{}«»\-–—]*)$/);
+      if (!m) { tokens.push({ text: norm, isWord: false, isClitic: false }); continue; }
+      const [, lead, word, trail] = m;
+      if (lead)  tokens.push({ text: lead, isWord: false, isClitic: false });
+      if (word)  tokens.push({ text: word, isWord: true,  isClitic: false });
+      if (trail) tokens.push({ text: trail, isWord: false, isClitic: false });
+    }
+  }
+  return tokens.filter(t => t.text !== '');
+}
+
+// ── Classify ──────────────────────────────────────────────────────────────────
+function classify(word, level) {
+  if (!word || /^\d+$/.test(word)) return 'ok';
+  const w = word.toLowerCase();
+  if (level === 'a1') {
+    if (WORDS.a1.has(w)) return 'ok';
+    if (WORDS.a2.has(w)) return 'advanced';
+    return 'unknown';
+  } else {
+    const combined = new Set([...WORDS.a1, ...WORDS.a2]);
+    if (combined.has(w)) return 'ok';
+    return 'unknown';
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function check() {
+  if (!loaded) return;
+  const text = document.getElementById('input').value;
+  if (!text.trim()) return;
+  closePopover();
+
+  const tokens = tokenize(text);
+  let ok = 0, adv = 0, unk = 0;
+  const advWords = [], unkWords = [];
+
+  let html = '';
+  for (const tok of tokens) {
+    if (!tok.isWord || tok.isClitic) {
+      html += escapeHtml(tok.text);
+      continue;
+    }
+    const w       = tok.text.toLowerCase();
+    const encoded = encodeURIComponent(w);
+    const result  = FEAT.levels ? classify(tok.text, currentLevel) : 'ok';
+    const clickable = FEAT.meanings;
+
+    if (result === 'ok') {
+      ok++;
+      html += clickable
+        ? `<span class="tok tok-ok" data-word="${encoded}">${escapeHtml(tok.text)}</span>`
+        : escapeHtml(tok.text);
+    } else if (result === 'advanced') {
+      adv++;
+      if (!advWords.includes(w)) advWords.push(w);
+      html += `<span class="tok tok-adv${clickable ? '' : ' tok-no-click'}" data-word="${encoded}">${escapeHtml(tok.text)}</span>`;
+    } else {
+      unk++;
+      if (!unkWords.includes(w)) unkWords.push(w);
+      html += `<span class="tok tok-unk tok-no-click">${escapeHtml(tok.text)}</span>`;
+    }
+  }
+
+  const total = ok + adv + unk;
+  if (total > 0) {
+    document.getElementById('barOk').style.width  = (ok  / total * 100) + '%';
+    document.getElementById('barAdv').style.width = (adv / total * 100) + '%';
+    document.getElementById('barUnk').style.width = (unk / total * 100) + '%';
+  }
+
+  const pct = total > 0 ? Math.round(ok / total * 100) : 100;
+  document.getElementById('statsText').innerHTML =
+    `<span class="ok">✓ ${ok} OK</span>` +
+    (adv ? `<span class="adv">▲ ${adv} ze héich</span>` : '') +
+    (unk ? `<span class="unk">✗ ${unk} onbekannt</span>` : '') +
+    `<span style="margin-left:auto">${total} Wierder · ${pct}% OK</span>`;
+
+  document.getElementById('outputText').innerHTML = html;
+
+  const sec = document.getElementById('flaggedSection');
+  if (adv === 0 && unk === 0) {
+    sec.style.display = 'none';
+  } else {
+    sec.style.display = 'block';
+    document.getElementById('advSection').innerHTML = adv ? `
+      <div class="flagged-title" style="color:var(--flag-adv);margin-top:1rem">
+        Ze héich fir ${currentLevel.toUpperCase()} (${adv})
+      </div>
+      <div class="flagged-chips">${advWords.map(w =>
+        `<span class="chip chip-adv">${escapeHtml(w)}</span>`).join('')}
+      </div>` : '';
+    document.getElementById('unkSection').innerHTML = unk ? `
+      <div class="flagged-title" style="color:var(--flag-unk);margin-top:1rem">
+        Net erkannt (${unk})
+      </div>
+      <div class="flagged-chips">${unkWords.map(w =>
+        `<span class="chip chip-unk">${escapeHtml(w)}</span>`).join('')}
+      </div>` : '';
+  }
+
+  document.getElementById('results').style.display = 'block';
+}
+
+// ── Popover ───────────────────────────────────────────────────────────────────
+const popover  = document.getElementById('popover');
+const popLemma = document.getElementById('popLemma');
+const popPos   = document.getElementById('popPos');
+const popLevel = document.getElementById('popLevel');
+const popBody  = document.getElementById('popBody');
+const popAudio = document.getElementById('popAudio');
+
+let _currentAudio = null;
+
+function playLodAudio() {
+  const lodId = popAudio.dataset.lodId;
+  if (!lodId) return;
+
+  // Stop any currently playing audio
+  if (_currentAudio) {
+    _currentAudio.pause();
+    _currentAudio = null;
+    if (popAudio.dataset.state === 'playing') {
+      popAudio.dataset.state = '';
+      return;   // second click = stop
+    }
+  }
+
+  const url = `https://lod.lu/uploads/AAC/${lodId}.m4a`;
+  _currentAudio = new Audio(url);
+  popAudio.dataset.state = 'loading';
+
+  _currentAudio.addEventListener('canplay', () => {
+    popAudio.dataset.state = 'playing';
+  });
+  _currentAudio.addEventListener('ended', () => {
+    popAudio.dataset.state = '';
+    _currentAudio = null;
+  });
+  _currentAudio.play().catch(() => {
+    popAudio.dataset.state = 'error';
+    _currentAudio = null;
+    setTimeout(() => { popAudio.dataset.state = ''; }, 2000);
+  });
+}
+
+popAudio.addEventListener('click', e => {
+  e.stopPropagation();
+  playLodAudio();
+});
+
+function closePopover() {
+  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  popover.style.display = 'none';
+}
+
+// ── Popover positioning ───────────────────────────────────────────────────────
+
+function _positionPopover(anchorEl) {
+  popover.style.visibility = 'hidden';
+  popover.style.display    = 'block';
+  const popH = popover.offsetHeight;
+  const popW = popover.offsetWidth || 260;
+  popover.style.display    = 'none';
+  popover.style.visibility = '';
+
+  const rect   = anchorEl.getBoundingClientRect();
+  const margin = 8;
+  let left = rect.left;
+  if (left + popW > window.innerWidth - margin) left = window.innerWidth - popW - margin;
+  if (left < margin) left = margin;
+  let top = rect.bottom + margin;
+  if (top + popH > window.innerHeight - margin) top = rect.top - popH - margin;
+  if (top < margin) top = margin;
+  popover.style.left    = left + 'px';
+  popover.style.top     = top  + 'px';
+  popover.style.display = 'block';
+  popover._anchorRect   = rect;
+}
+
+function showPopover(word, anchorEl) {
+  const entry = DICT ? (DICT[word] || null) : null;
+
+  // Lemma & POS
+  popLemma.textContent = entry ? entry.lemma : word;
+  popPos.textContent   = entry ? entry.pos   : '';
+
+  // Level badge
+  popLevel.className = 'pop-level';
+  if (entry) {
+    const lv = entry.level.toUpperCase();
+    popLevel.textContent = lv;
+    popLevel.classList.add(lv === 'A1' ? 'pop-level-a1' : 'pop-level-a2');
+  } else {
+    popLevel.textContent = '?';
+    popLevel.classList.add('pop-level-unk');
+  }
+
+  // Audio button — shown only when feature is on and lod_id is known
+  const lodId = entry?.lod_id || '';
+  if (lodId && FEAT.audio) {
+    popAudio.dataset.lodId = lodId;
+    popAudio.dataset.state = '';
+    popAudio.style.display = '';
+  } else {
+    popAudio.dataset.lodId = '';
+    popAudio.style.display = 'none';
+  }
+
+  // Meaning body
+  const MAX_SHOWN = 5;
+  if (entry && (entry.en?.length || entry.fr?.length)) {
+    // ── A1/A2 local data ──
+    const raw     = currentLang === 'fr' ? (entry.fr?.length ? entry.fr : entry.en)
+                                         : (entry.en?.length ? entry.en : entry.fr);
+    const items   = Array.isArray(raw) ? raw : [raw];
+    const langLbl = currentLang === 'fr' ? 'FR' : 'EN';
+    const visible = items.slice(0, MAX_SHOWN);
+    const hidden  = items.slice(MAX_SHOWN);
+    const rows = visible.map((m, i) =>
+      `<li><span class="meaning-num">${items.length > 1 ? (i+1)+'.' : ''}</span>${escapeHtml(m)}</li>`
+    ).join('');
+    const morePlaceholder = hidden.length ? `<button class="meaning-more-btn" id="meaningMoreBtn">`
+      + `+ ${hidden.length} more meaning${hidden.length > 1 ? 's' : ''}</button>` : '';
+    popBody.innerHTML = `<div class="pop-lang-label">${langLbl}</div>
+      <ul class="meaning-list" id="meaningList">${rows}</ul>${morePlaceholder}`;
+    if (hidden.length) {
+      document.getElementById('meaningMoreBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        expandMeanings(this, hidden, visible.length);
+      });
+    }
+  } else {
+    popBody.innerHTML = `<p class="pop-no-meaning">Keng Bedeitung fonnt.</p>`;
+  }
+
+  _positionPopover(anchorEl);
+}
+
+// Expand hidden meanings in popover
+function expandMeanings(btn, hiddenItems, startIdx) {
+  const list = document.getElementById('meaningList');
+  hiddenItems.forEach((m, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="meaning-num">${startIdx + i + 1}.</span>${escapeHtml(m)}`;
+    list.appendChild(li);
+  });
+  btn.remove();
+  // Re-position since popover height changed
+  const rect = popover._anchorRect;
+  if (rect) {
+    const popH = popover.offsetHeight;
+    let top = rect.bottom + 8;
+    if (top + popH > window.innerHeight - 8) top = rect.top - popH - 8;
+    if (top < 8) top = 8;
+    popover.style.top = top + 'px';
+  }
+}
+
+// Delegate click on token spans
+document.getElementById('outputText').addEventListener('click', e => {
+  const span = e.target.closest('.tok');
+  if (!span || span.classList.contains('tok-no-click')) { closePopover(); return; }
+  if (!FEAT.meanings) { closePopover(); return; }
+  e.stopPropagation();
+  const word = decodeURIComponent(span.dataset.word);
+  showPopover(word, span);
+});
+
+document.getElementById('popClose').addEventListener('click', closePopover);
+
+// Close popover on outside click
+document.addEventListener('click', e => {
+  if (!popover.contains(e.target)) closePopover();
+});
+
+// ── Run ───────────────────────────────────────────────────────────────────────
+document.getElementById('checkBtn').addEventListener('click', check);
+document.getElementById('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) check();
+});
+</script>
+</body>
+</html>
