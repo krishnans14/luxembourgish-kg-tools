@@ -70,14 +70,6 @@
   .sw-adv{background:var(--adv-bg);border:1px solid var(--adv)}
   .sw-unk{width:30px;height:12px;display:inline-block;text-decoration:underline wavy var(--unk);text-underline-offset:2px;font-size:.65rem;color:var(--text)}
 
-  /* ── Chips ── */
-  .flagged-section{margin-top:.75rem}
-  .flagged-title{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
-  .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem}
-  .chip{font-family:var(--mono);font-size:.78rem;padding:.18rem .5rem;border-radius:4px;cursor:pointer}
-  .chip-adv{background:var(--adv-bg);color:var(--adv)}
-  .chip-unk{background:var(--unk-bg);color:var(--unk);cursor:default}
-
   /* ── Popover ── */
   #popover{display:none;position:fixed;z-index:1000;width:292px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 22px rgba(0,0,0,.13);overflow:hidden;animation:popIn .11s ease}
   @keyframes popIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
@@ -162,10 +154,6 @@
       <span class="legend-item"><span class="swatch sw-ok"></span>Am Niveau</span>
       <span class="legend-item"><span class="swatch sw-adv"></span>Iwwer dem Niveau</span>
       <span class="legend-item"><span class="sw-unk">abc</span>Net am LOD</span>
-    </div>
-    <div id="flaggedSection" class="flagged-section" style="display:none">
-      <div id="advSection"></div>
-      <div id="unkSection"></div>
     </div>
   </div>
 </div>
@@ -315,7 +303,6 @@ function renderView(){
   var text=document.getElementById('inputArea').value;
   var tokens=tokenize(text);
   var nOk=0,nAdv=0,nUnk=0;
-  var advW=[],unkW=[];
   var html='';
   for(var i=0;i<tokens.length;i++){
     var tok=tokens[i];
@@ -330,10 +317,10 @@ function renderView(){
       html+=rv.key?'<span class="tok-ok" data-key="'+enc+'">'+esc(surf)+'</span>'
                   :'<span class="tok-ok">'+esc(surf)+'</span>';
     } else if(res==='adv'){
-      nAdv++;if(advW.indexOf(w)===-1)advW.push(w);
+      nAdv++;
       html+='<span class="tok-adv" data-key="'+enc+'">'+esc(surf)+'</span>';
     } else {
-      nUnk++;if(unkW.indexOf(w)===-1)unkW.push(w);
+      nUnk++;
       html+='<span class="tok-unk">'+esc(surf)+'</span>';
     }
   }
@@ -352,28 +339,6 @@ function renderView(){
   st+='<span style="margin-left:auto">'+total+' Wierder &middot; '+pct+'% OK</span>';
   document.getElementById('statsText').innerHTML=st;
 
-  var sec=document.getElementById('flaggedSection');
-  if(!nAdv&&!nUnk){sec.style.display='none';}
-  else{
-    sec.style.display='block';
-    var advHtml='';
-    if(nAdv){
-      advHtml='<div class="flagged-title" style="color:var(--adv);margin-top:.75rem">Iwwer dem Niveau ('+nAdv+')</div><div class="chips">';
-      for(var j=0;j<advW.length;j++){
-        var rk=resolveKey(advW[j]);var ek=encodeURIComponent(rk.key||advW[j]);
-        advHtml+='<span class="chip chip-adv" data-key="'+ek+'">'+esc(advW[j])+'</span>';
-      }
-      advHtml+='</div>';
-    }
-    var unkHtml='';
-    if(nUnk){
-      unkHtml='<div class="flagged-title" style="color:var(--unk);margin-top:.75rem">Net am Wierderbuch ('+nUnk+')</div><div class="chips">';
-      for(var j=0;j<unkW.length;j++)unkHtml+='<span class="chip chip-unk">'+esc(unkW[j])+'</span>';
-      unkHtml+='</div>';
-    }
-    document.getElementById('advSection').innerHTML=advHtml;
-    document.getElementById('unkSection').innerHTML=unkHtml;
-  }
 }
 
 var inputArea=document.getElementById('inputArea');
@@ -490,7 +455,7 @@ function closePopover(){
 document.getElementById('popClose').addEventListener('click',closePopover);
 document.addEventListener('click',function(e){
   var t=e.target;
-  if(!popover.contains(t)&&!t.classList.contains('tok-ok')&&!t.classList.contains('tok-adv')&&!t.classList.contains('chip-adv'))closePopover();
+  if(!popover.contains(t)&&!t.classList.contains('tok-ok')&&!t.classList.contains('tok-adv'))closePopover();
 });
 function handleTokenClick(e){
   var span=e.target.closest('[data-key]');if(!span){closePopover();return;}
@@ -498,7 +463,6 @@ function handleTokenClick(e){
   e.stopPropagation();showPopover(decodeURIComponent(span.dataset.key),span);
 }
 document.getElementById('outputArea').addEventListener('click',handleTokenClick);
-document.getElementById('flaggedSection').addEventListener('click',handleTokenClick);
 
 audioBtn.addEventListener('click',function(e){
   e.stopPropagation();
