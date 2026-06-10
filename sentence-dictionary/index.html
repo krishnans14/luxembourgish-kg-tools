@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="lb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lëtzebuergesch Wierderbuch</title>
+<style>
+  /* ── Variables ──────────────────────────────────────────────────────────── */
+  :root {
+    --bg:         #f8f7f4;
+    --surface:    #ffffff;
+    --border:     #e0ddd8;
+    --text:       #1a1a1a;
+    --text-muted: #6b6b6b;
+    --accent:     #2a6b43;
+    --accent-light: #e8f4ed;
+    --unknown:    #c0392b;
+    --pop-bg:     #ffffff;
+    --pop-shadow: 0 4px 20px rgba(0,0,0,0.14);
+    --radius:     8px;
+    --font:       'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* ── Reset ──────────────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────────────────── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    flex: 1;
+  }
+
+  .lang-group { display: flex; gap: 0.25rem; }
+
+  .lang-btn {
+    border: 1.5px solid var(--border);
+    background: transparent;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .lang-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .lang-btn:not(.active):hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Main area ───────────────────────────────────────────────────────────── */
+  main {
+    flex: 1;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  #toggleBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  #toggleBtn:hover { opacity: 0.88; }
+  #toggleBtn:disabled { opacity: 0.5; cursor: default; }
+
+  #statusMsg {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Text area (edit mode) ───────────────────────────────────────────────── */
+  #inputArea {
+    width: 100%;
+    min-height: 320px;
+    padding: 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: #fffef7;           /* warm cream — signals "editable" */
+    font-family: var(--font);
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s, background 0.2s;
+  }
+  #inputArea:focus { border-color: var(--accent); }
+
+  /* ── Output div (analysis mode) ─────────────────────────────────────────── */
+  #outputArea {
+    display: none;
+    min-height: 320px;
+    height: auto;                        /* grows with content — no scroll */
+    padding: 1rem;
+    border: 2px solid var(--accent);     /* green border = "you are in analysis mode" */
+    border-radius: var(--radius);
+    background: var(--surface);          /* plain white — highlights stand out */
+    font-size: 1rem;
+    line-height: 1.9;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: visible;
+  }
+
+  /* ── Token styles ───────────────────────────────────────────────────────── */
+  .tok-found {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0 2px;
+    background: #fef9c3;               /* amber/yellow — always visible, not green */
+    transition: background 0.1s;
+  }
+  .tok-found:hover { background: #fde047; }
+
+  /* inflected form resolved via LOD_FORMS — orange tint to distinguish from direct match */
+  .tok-found.tok-inflected {
+    background: #fed7aa;               /* light orange */
+  }
+  .tok-found.tok-inflected:hover { background: #fb923c; color: #fff; }
+
+  .tok-unknown {
+    text-decoration: underline wavy var(--unknown);
+    text-underline-offset: 3px;
+  }
+
+  /* ── Popover ────────────────────────────────────────────────────────────── */
+  #popover {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    width: 290px;
+    background: var(--pop-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-shadow);
+    overflow: hidden;
+  }
+
+  .pop-header {
+    padding: 0.6rem 0.85rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .pop-lemma {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  .pop-pos {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* homonym navigator  ◀ 1/3 ▶ */
+  .pop-nav {
+    display: none;
+    align-items: center;
+    gap: 0.2rem;
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .pop-nav.visible { display: flex; }
+  .pop-nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.1rem 0.35rem;
+    cursor: pointer;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    transition: border-color 0.1s, color 0.1s;
+  }
+  .pop-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pop-nav-label { min-width: 2.5em; text-align: center; }
+
+  .pop-close {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+    padding: 0 2px;
+    margin-left: 0.25rem;
+  }
+  .pop-close:hover { color: var(--text); }
+
+  /* grammatical sub-line: plural / auxiliary */
+  .pop-meta {
+    padding: 0.25rem 0.85rem 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    font-style: italic;
+  }
+  .pop-meta:empty { display: none; }
+
+  .pop-body {
+    padding: 0.6rem 0.85rem;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .pop-no-meaning {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  .meaning-list {
+    list-style: none;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+  .meaning-list li {
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #f0efec;
+    display: flex;
+    gap: 0.4rem;
+  }
+  .meaning-list li:last-child { border-bottom: none; }
+  .meaning-num {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    min-width: 1.2em;
+    padding-top: 0.1rem;
+  }
+
+  .meaning-more {
+    font-size: 0.8rem;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem 0;
+    display: block;
+  }
+  .meaning-more:hover { text-decoration: underline; }
+
+  .pop-footer {
+    padding: 0.5rem 0.85rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .audio-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .audio-btn:hover { opacity: 0.85; }
+  .audio-btn[data-state="error"] { background: #c0392b; }
+  .audio-btn[data-state="playing"] { background: #1f4a30; }
+
+  .lod-link {
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: auto;
+  }
+  .lod-link:hover { text-decoration: underline; }
+
+  /* ── Legend ─────────────────────────────────────────────────────────────── */
+  .legend {
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+  .swatch-found {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    background: #fef9c3;
+    border: 1px solid #ca8a04;
+    display: inline-block;
+  }
+  .swatch-unknown {
+    width: 32px; height: 14px;
+    display: inline-block;
+    text-decoration: underline wavy var(--unknown);
+    text-underline-offset: 3px;
+    font-size: 0.75rem;
+    color: var(--text);
+  }
+  .swatch-inflected {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    background: #fed7aa;
+    border: 1px solid #ea580c;
+    display: inline-block;
+  }
+
+  footer {
+    text-align: center;
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Lëtzebuergesch Wierderbuch</h1>
+  <!-- <div class="lang-group">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn"        data-lang="fr">FR</button>
+  </div> -->
+</header>
+
+<main>
+  <div class="toolbar">
+    <button id="toggleBtn">▶ Analyse</button>
+    <span id="statusMsg">Paste or type Luxembourgish text, then click Analyse.</span>
+  <div class="lang-group">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn"        data-lang="fr">FR</button>
+  </div>
+  </div>
+
+  <textarea id="inputArea"
+    placeholder="Paste or type Luxembourgish text here…"
+    spellcheck="false"></textarea>
+
+  <div id="outputArea"></div>
+
+  <div class="legend" id="legend" style="display:none">
+    <span class="legend-item"><span class="swatch-found"></span>Word found — click for meaning</span>
+    <span class="legend-item"><span class="swatch-inflected"></span>Inflected form resolved</span>
+    <span class="legend-item"><span class="swatch-unknown">abc</span>Not in dictionary</span>
+  </div>
+</main>
+
+<!-- Popover -->
+<div id="popover" role="tooltip">
+  <div class="pop-header">
+    <span class="pop-lemma" id="popLemma"></span>
+    <span class="pop-pos"   id="popPos"></span>
+    <!-- homonym nav: ◀ 1/3 ▶ -->
+    <span class="pop-nav" id="popNav">
+      <button class="pop-nav-btn" id="popPrev">◀</button>
+      <span   class="pop-nav-label" id="popNavLabel"></span>
+      <button class="pop-nav-btn" id="popNext">▶</button>
+    </span>
+    <button class="pop-close" id="popClose">✕</button>
+  </div>
+  <div class="pop-meta" id="popMeta"></div>
+  <div class="pop-body" id="popBody"></div>
+  <div class="pop-footer">
+    <button class="audio-btn" id="audioBtn" title="Play pronunciation" style="display:none">▶</button>
+    <a class="lod-link" id="lodLink" href="#" target="_blank">Open in LOD ↗</a>
+  </div>
+</div>
+
+<footer>
+  Data: <a href="https://lod.lu" target="_blank">LOD</a> (CC0) ·
+  <a href="https://zls.lu" target="_blank">Zenter fir d'Lëtzebuerger Sprooch</a>
+</footer>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let MODE = 'edit';   // 'edit' | 'view'
+let LANG = 'en';     // 'en' | 'fr'
+let DATA = null;     // loaded dictionary for current language (values are arrays)
+let dataLoading = false;
+let dataLoaded  = { en: false, fr: false };
+
+// ── POS label lookup (stored code → full label per language) ─────────────────
+const POS_LABELS = {
+  en: {
+    NOUN: 'Noun', VERB: 'Verb', ADJ: 'Adjective', ADV: 'Adverb',
+    PREP: 'Preposition', CONJ: 'Conjunction', PRON: 'Pronoun',
+    INTERJ: 'Interjection', NUM: 'Numeral', ART: 'Article', PART: 'Particle',
+  },
+  fr: {
+    NOUN: 'Nom', VERB: 'Verbe', ADJ: 'Adjectif', ADV: 'Adverbe',
+    PREP: 'Préposition', CONJ: 'Conjonction', PRON: 'Pronom',
+    INTERJ: 'Interjection', NUM: 'Numéral', ART: 'Article', PART: 'Particule',
+  },
+};
+function posLabel(code) {
+  return (POS_LABELS[LANG] || POS_LABELS.en)[code] || code || '';
+}
+
+// LOD_FORMS: inflected form → base lemma (lazy-loaded once)
+let formsLoaded  = false;
+let formsLoading = false;
+
+const MAX_SHOWN = 5;
+
+// ── Dictionary loading ────────────────────────────────────────────────────────
+function loadData(lang) {
+  if (dataLoaded[lang]) { DATA = lang === 'en' ? window.LOD_EN : window.LOD_FR; return; }
+  if (dataLoading) return;
+  dataLoading = true;
+  setStatus('Loading dictionary…');
+  const script = document.createElement('script');
+  script.src   = lang === 'en' ? 'lod_en.js' : 'lod_fr.js';
+  script.onload = () => {
+    DATA = lang === 'en' ? window.LOD_EN : window.LOD_FR;
+    dataLoaded[lang] = true;
+    dataLoading = false;
+    const nKeys = Object.keys(DATA).length;
+    setStatus('Dictionary loaded. ' + nKeys.toLocaleString() + ' entries.');
+    loadForms();                     // kick off forms load in parallel
+    if (MODE === 'view') renderView();
+  };
+  script.onerror = () => {
+    dataLoading = false;
+    setStatus('Could not load dictionary — run build_data.py first.');
+  };
+  document.head.appendChild(script);
+}
+
+// ── Inflected-forms index loading (lazy, once) ────────────────────────────────
+function loadForms() {
+  if (formsLoaded || formsLoading) return;
+  formsLoading = true;
+  const script = document.createElement('script');
+  script.src = 'lod_forms.js';
+  script.onload = () => {
+    formsLoaded  = true;
+    formsLoading = false;
+    if (MODE === 'view') renderView();   // re-render with inflection awareness
+  };
+  script.onerror = () => { formsLoading = false; };  // silent — optional file
+  document.head.appendChild(script);
+}
+
+// Resolve a surface form to a DATA key.
+// Returns { key, isInflected } — key is null if not found.
+function resolveKey(surfaceKey) {
+  if (DATA && DATA[surfaceKey]) return { key: surfaceKey, isInflected: false };
+  if (formsLoaded && window.LOD_FORMS) {
+    const base = window.LOD_FORMS[surfaceKey];
+    if (base && DATA && DATA[base]) return { key: base, isInflected: true };
+    // Also try capitalised surface form (nouns stored lowercase in forms index)
+    const baseLower = window.LOD_FORMS[surfaceKey.toLowerCase()];
+    if (baseLower && DATA && DATA[baseLower]) return { key: baseLower, isInflected: true };
+  }
+  return { key: null, isInflected: false };
+}
+
+// ── Language buttons ──────────────────────────────────────────────────────────
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    LANG = btn.dataset.lang;
+    DATA = null;
+    dataLoaded[LANG] = false;
+    if (MODE === 'view') loadData(LANG);
+  });
+});
+
+// ── Tokenizer (handles Luxembourgish clitics like d', n-) ────────────────────
+function tokenize(text) {
+  const tokens = [];
+  for (const chunk of text.split(/(\s+)/)) {
+    if (!chunk) continue;
+    if (/^\s+$/.test(chunk)) { tokens.push({ text: chunk, isWord: false }); continue; }
+
+    const norm = chunk.replace(/'/g, "'");
+    if (norm.includes("'")) {
+      const parts = norm.split("'");
+      parts.forEach((part, i) => {
+        const m = part.match(/^([^\w]*)([\wÀ-ɏ]*)([^\w]*)$/u);
+        if (!m) return;
+        if (m[1]) tokens.push({ text: m[1], isWord: false });
+        if (i < parts.length - 1) {
+          if (m[2]) tokens.push({ text: m[2] + "'", isWord: true });
+        } else {
+          if (m[2]) tokens.push({ text: m[2], isWord: true });
+        }
+        if (m[3]) tokens.push({ text: m[3], isWord: false });
+      });
+    } else {
+      const m = chunk.match(/^([^\wÀ-ɏ]*)([^\W\d_À-ɏ]*[\wÀ-ɏ]*)([^\wÀ-ɏ]*)$/u);
+      if (!m || !m[2]) { tokens.push({ text: chunk, isWord: false }); continue; }
+      if (m[1]) tokens.push({ text: m[1], isWord: false });
+      if (m[2]) tokens.push({ text: m[2], isWord: true  });
+      if (m[3]) tokens.push({ text: m[3], isWord: false });
+    }
+  }
+  return tokens.filter(t => t.text !== '');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Render view mode ──────────────────────────────────────────────────────────
+function renderView() {
+  const text   = document.getElementById('inputArea').value;
+  const tokens = tokenize(text);
+  let found = 0, inflected = 0, unknown = 0, html = '';
+
+  for (const tok of tokens) {
+    if (!tok.isWord) { html += escapeHtml(tok.text); continue; }
+    const surface = tok.text.toLowerCase().replace(/'/g, "'");
+    const { key, isInflected } = resolveKey(surface);
+    if (key) {
+      found++;
+      if (isInflected) inflected++;
+      const cls = isInflected ? 'tok-found tok-inflected' : 'tok-found';
+      html += `<span class="${cls}" data-key="${encodeURIComponent(key)}">${escapeHtml(tok.text)}</span>`;
+    } else {
+      if (tok.text.trim()) unknown++;
+      html += `<span class="tok-unknown">${escapeHtml(tok.text)}</span>`;
+    }
+  }
+
+  document.getElementById('outputArea').innerHTML = html;
+  const total = found + unknown;
+  const inflMsg = inflected ? ` (${inflected} via inflection)` : '';
+  setStatus(total
+    ? `${found.toLocaleString()} words found${inflMsg} · ${unknown.toLocaleString()} not in dictionary`
+    : 'No words detected.');
+}
+
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+function setMode(m) {
+  MODE = m;
+  const input  = document.getElementById('inputArea');
+  const output = document.getElementById('outputArea');
+  const btn    = document.getElementById('toggleBtn');
+  const legend = document.getElementById('legend');
+
+  if (m === 'view') {
+    if (!DATA) { loadData(LANG); return; }
+    input.style.display  = 'none';
+    output.style.display = 'block';
+    legend.style.display = 'flex';
+    btn.textContent      = '✎ Edit';
+    renderView();
+  } else {
+    input.style.display  = '';
+    output.style.display = 'none';
+    legend.style.display = 'none';
+    btn.textContent      = '▶ Analyse';
+    closePopover();
+    setStatus('Paste or type Luxembourgish text, then click Analyse.');
+  }
+}
+
+document.getElementById('toggleBtn').addEventListener('click', () => {
+  setMode(MODE === 'edit' ? 'view' : 'edit');
+});
+
+// ── Popover — homonym-aware ───────────────────────────────────────────────────
+const popover    = document.getElementById('popover');
+const popLemma   = document.getElementById('popLemma');
+const popPos     = document.getElementById('popPos');
+const popNav     = document.getElementById('popNav');
+const popNavLabel= document.getElementById('popNavLabel');
+const popMeta    = document.getElementById('popMeta');
+const popBody    = document.getElementById('popBody');
+const audioBtn   = document.getElementById('audioBtn');
+const lodLink    = document.getElementById('lodLink');
+let _audio = null;
+
+// Current popover state
+let _popEntries = [];   // the array of entries for the current key
+let _popIdx     = 0;    // which entry is showing
+let _popAnchor  = null;
+
+function renderPopEntry() {
+  const entry = _popEntries[_popIdx];
+  const total = _popEntries.length;
+
+  popLemma.textContent = entry.lemma || '';
+  popPos.textContent   = posLabel(entry.pos);
+
+  // Grammatical meta line: plural (nouns) or auxiliary (verbs)
+  let meta = '';
+  if ('pl' in entry) {
+    meta = entry.pl != null
+      ? `pl. ${entry.pl}`
+      : (LANG === 'fr' ? 'sans pluriel' : 'no plural');
+  } else if (entry.aux) {
+    meta = `aux. ${entry.aux}`;
+  }
+  popMeta.textContent = meta;
+
+  // Homonym navigation
+  if (total > 1) {
+    popNavLabel.textContent = `${_popIdx + 1}/${total}`;
+    popNav.classList.add('visible');
+  } else {
+    popNav.classList.remove('visible');
+  }
+
+  // Audio
+  const audioUrl = `https://lod.lu/uploads/AAC/${entry.id}.m4a`;
+  if (_audio) { _audio.pause(); _audio = null; }
+  audioBtn.dataset.url   = audioUrl;
+  audioBtn.dataset.state = '';
+  audioBtn.textContent   = '▶';
+  audioBtn.style.display = '';
+
+  // LOD link
+  lodLink.href = `https://lod.lu/artikel/${entry.id.toUpperCase()}`;
+
+  // Meanings
+  const items = entry.m || [];
+  if (items.length === 0) {
+    popBody.innerHTML = '<p class="pop-no-meaning">No meaning available.</p>';
+  } else {
+    const visible = items.slice(0, MAX_SHOWN);
+    const hidden  = items.slice(MAX_SHOWN);
+    const rows = visible.map((m, i) =>
+      `<li><span class="meaning-num">${items.length > 1 ? (i+1)+'.' : ''}</span>${escapeHtml(m)}</li>`
+    ).join('');
+    const more = hidden.length
+      ? `<button class="meaning-more" id="meaningMore">+ ${hidden.length} more</button>` : '';
+    popBody.innerHTML = `<ul class="meaning-list" id="meaningList">${rows}</ul>${more}`;
+    if (hidden.length) {
+      document.getElementById('meaningMore').addEventListener('click', function(e) {
+        e.stopPropagation();
+        const list = document.getElementById('meaningList');
+        hidden.forEach((m, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="meaning-num">${visible.length+i+1}.</span>${escapeHtml(m)}`;
+          list.appendChild(li);
+        });
+        this.remove();
+        repositionPopover(_popAnchor);
+      });
+    }
+  }
+
+  repositionPopover(_popAnchor);
+}
+
+function showPopover(key, anchorEl) {
+  const raw = DATA ? DATA[key] : null;
+  if (!raw) return;
+  // Support both new format (array) and old pre-built files (single object)
+  const entries = Array.isArray(raw) ? raw : [raw];
+  if (entries.length === 0) return;
+
+  _popEntries = entries;
+  _popIdx     = 0;
+  _popAnchor  = anchorEl;
+
+  positionPopover(anchorEl);   // show first, then fill (avoids layout flash)
+  renderPopEntry();
+}
+
+// Homonym navigation
+document.getElementById('popPrev').addEventListener('click', e => {
+  e.stopPropagation();
+  if (_popEntries.length < 2) return;
+  _popIdx = (_popIdx - 1 + _popEntries.length) % _popEntries.length;
+  renderPopEntry();
+});
+document.getElementById('popNext').addEventListener('click', e => {
+  e.stopPropagation();
+  if (_popEntries.length < 2) return;
+  _popIdx = (_popIdx + 1) % _popEntries.length;
+  renderPopEntry();
+});
+
+function positionPopover(anchorEl) {
+  popover.style.visibility = 'hidden';
+  popover.style.display    = 'block';
+  const ph = popover.offsetHeight;
+  const pw = popover.offsetWidth || 290;
+  popover.style.display    = 'none';
+  popover.style.visibility = '';
+
+  const rect   = anchorEl.getBoundingClientRect();
+  const margin = 8;
+  let left = rect.left;
+  if (left + pw > window.innerWidth - margin) left = window.innerWidth - pw - margin;
+  if (left < margin) left = margin;
+  let top = rect.bottom + margin;
+  if (top + ph > window.innerHeight - margin) top = rect.top - ph - margin;
+  if (top < margin) top = margin;
+
+  popover.style.left    = left + 'px';
+  popover.style.top     = top  + 'px';
+  popover.style.display = 'block';
+  popover._anchor = anchorEl;
+}
+
+function repositionPopover(anchorEl) {
+  if (popover.style.display !== 'none') positionPopover(anchorEl || popover._anchor);
+}
+
+function closePopover() {
+  if (_audio) { _audio.pause(); _audio = null; }
+  audioBtn.dataset.state = '';
+  audioBtn.textContent   = '▶';
+  popover.style.display  = 'none';
+  _popEntries = [];
+}
+
+document.getElementById('popClose').addEventListener('click', closePopover);
+document.addEventListener('click', e => {
+  if (!popover.contains(e.target) && !e.target.classList.contains('tok-found')) closePopover();
+});
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
+audioBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const url = audioBtn.dataset.url;
+  if (!url) return;
+  if (_audio) {
+    _audio.pause(); _audio = null;
+    if (audioBtn.dataset.state === 'playing') {
+      audioBtn.dataset.state = ''; audioBtn.textContent = '▶'; return;
+    }
+  }
+  _audio = new Audio(url);
+  audioBtn.dataset.state = 'loading';
+  audioBtn.textContent   = '…';
+  _audio.addEventListener('canplay',  () => { audioBtn.dataset.state = 'playing'; audioBtn.textContent = '■'; });
+  _audio.addEventListener('ended',    () => { audioBtn.dataset.state = ''; audioBtn.textContent = '▶'; _audio = null; });
+  _audio.play().catch(() => {
+    audioBtn.dataset.state = 'error'; audioBtn.textContent = '✕';
+    setTimeout(() => { audioBtn.dataset.state = ''; audioBtn.textContent = '▶'; }, 2000);
+  });
+});
+
+// ── Click delegation on output tokens ────────────────────────────────────────
+document.getElementById('outputArea').addEventListener('click', e => {
+  const span = e.target.closest('.tok-found');
+  if (!span) { closePopover(); return; }
+  e.stopPropagation();
+  const key = decodeURIComponent(span.dataset.key);
+  showPopover(key, span);
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('statusMsg').textContent = msg;
+}
+</script>
+</body>
+</html>
