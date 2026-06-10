@@ -471,8 +471,8 @@ function loadData(lang) {
     dataLoading = false;
     const nKeys = Object.keys(DATA).length;
     setStatus('Dictionary loaded. ' + nKeys.toLocaleString() + ' entries.');
-    loadForms();                     // kick off forms load in parallel
-    if (MODE === 'view') renderView();
+    loadForms();                      // kick off forms load in parallel
+    if (MODE === 'view') setMode('view'); // complete the full UI switch (was blocked by early return)
   };
   script.onerror = () => {
     dataLoading = false;
