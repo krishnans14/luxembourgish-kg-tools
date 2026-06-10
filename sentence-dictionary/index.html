@@ -394,9 +394,9 @@
   <div id="outputArea"></div>
 
   <div class="legend" id="legend" style="display:none">
-    <span class="legend-item"><span class="swatch-found"></span>Word found — click for meaning</span>
-    <span class="legend-item"><span class="swatch-inflected"></span>Inflected form resolved</span>
-    <span class="legend-item"><span class="swatch-unknown">abc</span>Not in dictionary</span>
+    <span class="legend-item"><span class="swatch-found"></span>Wuert fonnt — klickt fir d'Bedeitung</span>
+    <span class="legend-item"><span class="swatch-inflected"></span>Konjugatioun oder Inflektioun</span>
+    <span class="legend-item"><span class="swatch-unknown">abc</span>Net am Wierderbuch</span>
   </div>
 </main>
 
@@ -583,8 +583,8 @@ function renderView() {
   const total = found + unknown;
   const inflMsg = inflected ? ` (${inflected} via inflection)` : '';
   setStatus(total
-    ? `${found.toLocaleString()} words found${inflMsg} · ${unknown.toLocaleString()} not in dictionary`
-    : 'No words detected.');
+    ? `${found.toLocaleString()} Wierder fonnt${inflMsg} · ${unknown.toLocaleString()} net am Wierderbuch`
+    : 'Kee Wierder fonnt');
 }
 
 // ── Mode toggle ───────────────────────────────────────────────────────────────
