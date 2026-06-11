@@ -464,7 +464,7 @@ function loadData(lang) {
   dataLoading = true;
   setStatus('Loading dictionary…');
   const script = document.createElement('script');
-  script.src   = lang === 'en' ? 'lod_en.js' : 'lod_fr.js';
+  script.src   = lang === 'en' ? '../common_data/lod_en.js' : '../common_data/lod_fr.js';
   script.onload = () => {
     DATA = lang === 'en' ? window.LOD_EN : window.LOD_FR;
     dataLoaded[lang] = true;
@@ -486,7 +486,7 @@ function loadForms() {
   if (formsLoaded || formsLoading) return;
   formsLoading = true;
   const script = document.createElement('script');
-  script.src = 'lod_forms.js';
+  script.src = '../common_data/lod_forms.js';
   script.onload = () => {
     formsLoaded  = true;
     formsLoading = false;

@@ -135,7 +135,7 @@
   <div class="toolbar">
     <button id="toggleBtn" disabled>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
-      Iwwerpréiwen / Analyse
+      Check
     </button>
     <span id="statusMsg">Wuertlëschten ginn gelueden...</span>
   </div>
@@ -201,7 +201,7 @@ function init(){
     WORDS_A1=new Set(window.WORDDATA.a1);
     WORDS_A2=new Set(window.WORDDATA.a2);
     wordDataReady=true;
-    setStatus('Paste or type Luxembourgish text, then click Analyse.');
+    setStatus('Schreift lëtzebuergeschen Text an a klickt dann.');
     document.getElementById('toggleBtn').disabled=false;
     loadDict(LANG); loadForms();
   } else { setStatus('Error: worddata.js failed to load.'); }
@@ -213,7 +213,7 @@ function loadDict(lang){
   if(dictLoading)return;
   dictLoading=true;
   var s=document.createElement('script');
-  s.src=(lang==='en')?'lod_en.js':'lod_fr.js';
+  s.src=(lang==='en')?'../common_data/lod_en.js':'../common_data/lod_fr.js';
   s.onload=function(){DATA=(lang==='en')?window.LOD_EN:window.LOD_FR;dictLoaded[lang]=true;dictLoading=false;if(MODE==='view')renderView();};
   s.onerror=function(){dictLoading=false;};
   document.head.appendChild(s);
@@ -222,7 +222,7 @@ function loadForms(){
   if(formsLoaded||formsLoading)return;
   formsLoading=true;
   var s=document.createElement('script');
-  s.src='lod_forms.js';
+  s.src='../common_data/lod_forms.js';
   s.onload=function(){formsLoaded=true;formsLoading=false;if(MODE==='view')renderView();};
   s.onerror=function(){formsLoading=false;};
   document.head.appendChild(s);
@@ -357,7 +357,7 @@ function setMode(m){
     renderView();
   } else {
     inputArea.style.display='';outputArea.style.display='none';statsWrap.style.display='none';
-    toggleBtn.innerHTML=SVG_SRCH+' Iwwerpréiwen / Analyse';
+    toggleBtn.innerHTML=SVG_SRCH+' Check';
     closePopover();
     setStatus('Paste or type Luxembourgish text, then click Analyse.');
   }
@@ -478,3 +478,4 @@ function setStatus(msg){document.getElementById('statusMsg').textContent=msg;}
 </script>
 </body>
 </html>
+                                        
