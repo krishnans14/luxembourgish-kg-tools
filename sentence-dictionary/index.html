@@ -533,7 +533,7 @@ function tokenize(text) {
     if (norm.includes("'")) {
       const parts = norm.split("'");
       parts.forEach((part, i) => {
-        const m = part.match(/^([^\w]*)([\wÀ-ɏ]*)([^\w]*)$/u);
+        const m = part.match(/^([^\wÀ-ɏ]*)([\wÀ-ɏ]*)([^\wÀ-ɏ]*)$/u);
         if (!m) return;
         if (m[1]) tokens.push({ text: m[1], isWord: false });
         if (i < parts.length - 1) {
@@ -640,12 +640,14 @@ function renderPopEntry() {
   popLemma.textContent = entry.lemma || '';
   popPos.textContent   = posLabel(entry.pos);
 
-  // Grammatical meta line: plural (nouns) or auxiliary (verbs)
+  // Grammatical meta line: gender + plural (nouns) or auxiliary (verbs)
   let meta = '';
   if ('pl' in entry) {
-    meta = entry.pl != null
+    const gender = entry.g ? entry.g + ' ' : '';
+    const plural = entry.pl != null
       ? `pl. ${entry.pl}`
       : (LANG === 'fr' ? 'sans pluriel' : 'no plural');
+    meta = gender + plural;
   } else if (entry.aux) {
     meta = `aux. ${entry.aux}`;
   }
