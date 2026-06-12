@@ -522,36 +522,21 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
   });
 });
 
-// ── Tokenizer (handles Luxembourgish clitics like d', n-) ────────────────────
+// ── Tokenizer — extracts every word, ignoring surrounding punctuation ───────
+// Handles ..Jo..ma..nee, hyphenated words (E-Mail-Adress), Luxembourgish
+// clitics (d'Wieder, n'Apel) and typographic apostrophes (’).
 function tokenize(text) {
+  const norm = text.replace(/[’‘ʼ]/g, "'");      // 1:1 — indices stay aligned
+  const re = /[A-Za-zÀ-ɏ]+(?:-[A-Za-zÀ-ɏ]+)*(?:'(?=[A-Za-zÀ-ɏ]))?/g;
   const tokens = [];
-  for (const chunk of text.split(/(\s+)/)) {
-    if (!chunk) continue;
-    if (/^\s+$/.test(chunk)) { tokens.push({ text: chunk, isWord: false }); continue; }
-
-    const norm = chunk.replace(/'/g, "'");
-    if (norm.includes("'")) {
-      const parts = norm.split("'");
-      parts.forEach((part, i) => {
-        const m = part.match(/^([^\wÀ-ɏ]*)([\wÀ-ɏ]*)([^\wÀ-ɏ]*)$/u);
-        if (!m) return;
-        if (m[1]) tokens.push({ text: m[1], isWord: false });
-        if (i < parts.length - 1) {
-          if (m[2]) tokens.push({ text: m[2] + "'", isWord: true });
-        } else {
-          if (m[2]) tokens.push({ text: m[2], isWord: true });
-        }
-        if (m[3]) tokens.push({ text: m[3], isWord: false });
-      });
-    } else {
-      const m = chunk.match(/^([^\wÀ-ɏ]*)([^\W\d_À-ɏ]*[\wÀ-ɏ]*)([^\wÀ-ɏ]*)$/u);
-      if (!m || !m[2]) { tokens.push({ text: chunk, isWord: false }); continue; }
-      if (m[1]) tokens.push({ text: m[1], isWord: false });
-      if (m[2]) tokens.push({ text: m[2], isWord: true  });
-      if (m[3]) tokens.push({ text: m[3], isWord: false });
-    }
+  let last = 0, m;
+  while ((m = re.exec(norm)) !== null) {
+    if (m.index > last) tokens.push({ text: text.slice(last, m.index), isWord: false });
+    tokens.push({ text: text.slice(m.index, m.index + m[0].length), isWord: true });
+    last = m.index + m[0].length;
   }
-  return tokens.filter(t => t.text !== '');
+  if (last < text.length) tokens.push({ text: text.slice(last), isWord: false });
+  return tokens;
 }
 
 function escapeHtml(s) {
@@ -566,7 +551,7 @@ function renderView() {
 
   for (const tok of tokens) {
     if (!tok.isWord) { html += escapeHtml(tok.text); continue; }
-    const surface = tok.text.toLowerCase().replace(/'/g, "'");
+    const surface = tok.text.toLowerCase().replace(/[’‘ʼ]/g, "'");
     const { key, isInflected } = resolveKey(surface);
     if (key) {
       found++;

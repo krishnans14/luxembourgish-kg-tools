@@ -250,7 +250,7 @@ function resolveKey(surf){
    A1 level even though their base lemma is A1.                               */
 function classify(surface){
   if(!surface||/^\d+$/.test(surface))return'ok';
-  var w=surface.toLowerCase().replace(/'/g,"'");
+  var w=surface.toLowerCase().replace(/[’‘ʼ]/g,"'");
 
   /* 1. direct A1 set lookup */
   if(WORDS_A1.has(w))return'ok';
@@ -270,32 +270,20 @@ function classify(surface){
 }
 
 function tokenize(text){
-  var tokens=[],chunks=text.split(/(\s+)/);
-  for(var ci=0;ci<chunks.length;ci++){
-    var chunk=chunks[ci];
-    if(!chunk)continue;
-    if(/^\s+$/.test(chunk)){tokens.push({text:chunk,isWord:false});continue;}
-    var norm=chunk.replace(/'/g,"'");
-    if(norm.indexOf("'")!==-1){
-      var parts=norm.split("'");
-      for(var pi=0;pi<parts.length;pi++){
-        var part=parts[pi];
-        var m=part.match(/^([^\wÀ-ɏ]*)([À-ɏ\w]*)([^\wÀ-ɏ]*)$/u);
-        if(!m)continue;
-        if(m[1])tokens.push({text:m[1],isWord:false});
-        if(pi<parts.length-1){if(m[2])tokens.push({text:m[2]+"'",isWord:true,isClitic:true});}
-        else{if(m[2])tokens.push({text:m[2],isWord:true});}
-        if(m[3])tokens.push({text:m[3],isWord:false});
-      }
-    } else {
-      var m2=chunk.match(/^([^\wÀ-ɏ]*)([À-ɏ\w]*)([^\wÀ-ɏ]*)$/u);
-      if(!m2||!m2[2]){tokens.push({text:chunk,isWord:false});continue;}
-      if(m2[1])tokens.push({text:m2[1],isWord:false});
-      if(m2[2])tokens.push({text:m2[2],isWord:true});
-      if(m2[3])tokens.push({text:m2[3],isWord:false});
-    }
+  /* extracts every word, ignoring surrounding punctuation (..Jo..ma..nee),
+     handles hyphenated words, clitics (d'Wieder) and curly apostrophes */
+  var norm=text.replace(/[’‘ʼ]/g,"'");
+  var re=/[A-Za-zÀ-ɏ]+(?:-[A-Za-zÀ-ɏ]+)*(?:'(?=[A-Za-zÀ-ɏ]))?/g;
+  var tokens=[],last=0,m;
+  while((m=re.exec(norm))!==null){
+    if(m.index>last)tokens.push({text:text.slice(last,m.index),isWord:false});
+    var w=text.slice(m.index,m.index+m[0].length);
+    if(m[0].charAt(m[0].length-1)==="'")tokens.push({text:w,isWord:true,isClitic:true});
+    else tokens.push({text:w,isWord:true});
+    last=m.index+m[0].length;
   }
-  return tokens.filter(function(t){return t.text!=='';});
+  if(last<text.length)tokens.push({text:text.slice(last),isWord:false});
+  return tokens;
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -309,7 +297,7 @@ function renderView(){
     if(!tok.isWord){html+=esc(tok.text);continue;}
     if(tok.isClitic){html+=esc(tok.text);continue;}
     var surf=tok.text,res=classify(surf);
-    var rv=resolveKey(surf.toLowerCase().replace(/'/g,"'"));
+    var rv=resolveKey(surf.toLowerCase().replace(/[’‘ʼ]/g,"'"));
     var enc=encodeURIComponent(rv.key||surf.toLowerCase());
     var w=surf.toLowerCase();
     if(res==='ok'){
@@ -478,4 +466,3 @@ function setStatus(msg){document.getElementById('statusMsg').textContent=msg;}
 </script>
 </body>
 </html>
-                                        
