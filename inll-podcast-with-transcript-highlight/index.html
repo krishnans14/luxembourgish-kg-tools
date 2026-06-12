@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="lb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poterkëscht — Podcast mat Transkripter</title>
+<style>
+  :root {
+    --bg:         #f8f7f4;
+    --surface:    #ffffff;
+    --border:     #e0ddd8;
+    --text:       #1a1a1a;
+    --text-muted: #6b6b6b;
+    --accent:     #2a6b43;
+    --accent-light: #e8f4ed;
+    --unknown:    #c0392b;
+    --pop-bg:     #ffffff;
+    --pop-shadow: 0 4px 20px rgba(0,0,0,0.14);
+    --radius:     8px;
+    --font:       'Segoe UI', system-ui, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 1.1rem; font-weight: 600; color: var(--accent); flex: 1; }
+
+  .lang-group { display: flex; gap: 0.25rem; }
+  .lang-btn {
+    border: 1.5px solid var(--border);
+    background: transparent;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .lang-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .lang-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+
+  main {
+    flex: 1;
+    padding: 1.25rem 1.5rem;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ── Episode list ── */
+  .list-toolbar {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  #searchBox {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.45rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 0.9rem;
+    outline: none;
+  }
+  #searchBox:focus { border-color: var(--accent); }
+  .chip {
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    padding: 0.25rem 0.7rem;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .ep-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .ep-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .ep-card .ep-main { flex: 1; min-width: 0; }
+  .ep-title { font-weight: 600; font-size: 0.95rem; }
+  .ep-meta  { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    flex-shrink: 0;
+  }
+  .badge-level { background: var(--accent-light); color: var(--accent); }
+  .badge-tx    { background: #fef9c3; color: #854d0e; }
+  .badge-notx  { background: #f1f0ed; color: var(--text-muted); }
+
+  /* ── Episode view ── */
+  #backBtn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 0.9rem;
+  }
+  #backBtn:hover { text-decoration: underline; }
+
+  .ep-head h2 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+  .ep-head .ep-meta { margin-bottom: 0.9rem; }
+
+  audio { width: 100%; margin: 0.4rem 0 0.6rem; }
+
+  .ext-links { font-size: 0.82rem; margin-bottom: 1rem; }
+  .ext-links a { color: var(--accent); }
+
+  .ep-intro {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-bottom: 1rem;
+    white-space: pre-wrap;
+  }
+
+  .transcript {
+    padding: 1rem;
+    border: 2px solid var(--accent);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 1rem;
+    line-height: 1.9;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .no-transcript {
+    padding: 1rem;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .no-transcript a { color: var(--accent); }
+  .no-transcript code {
+    background: var(--bg);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+
+  .tok-found {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 0 2px;
+    background: #fef9c3;
+    transition: background 0.1s;
+  }
+  .tok-found:hover { background: #fde047; }
+  .tok-found.tok-inflected { background: #fed7aa; }
+  .tok-found.tok-inflected:hover { background: #fb923c; color: #fff; }
+  .tok-unknown {
+    text-decoration: underline wavy var(--unknown);
+    text-underline-offset: 3px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+  .swatch-found {
+    width: 14px; height: 14px; border-radius: 3px;
+    background: #fef9c3; border: 1px solid #ca8a04; display: inline-block;
+  }
+  .swatch-inflected {
+    width: 14px; height: 14px; border-radius: 3px;
+    background: #fed7aa; border: 1px solid #ea580c; display: inline-block;
+  }
+  .swatch-unknown {
+    width: 32px; height: 14px; display: inline-block;
+    text-decoration: underline wavy var(--unknown);
+    text-underline-offset: 3px; font-size: 0.75rem; color: var(--text);
+  }
+
+  #statusMsg { font-size: 0.82rem; color: var(--text-muted); }
+
+  /* ── Popover (same as reader) ── */
+  #popover {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    width: 290px;
+    background: var(--pop-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--pop-shadow);
+    overflow: hidden;
+  }
+  .pop-header {
+    padding: 0.6rem 0.85rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap;
+  }
+  .pop-lemma { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+  .pop-pos {
+    font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .pop-nav {
+    display: none; align-items: center; gap: 0.2rem; margin-left: auto;
+    font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;
+  }
+  .pop-nav.visible { display: flex; }
+  .pop-nav-btn {
+    background: none; border: 1px solid var(--border); border-radius: 3px;
+    padding: 0.1rem 0.35rem; cursor: pointer; font-size: 0.7rem;
+    color: var(--text-muted); line-height: 1.4;
+    transition: border-color 0.1s, color 0.1s;
+  }
+  .pop-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .pop-nav-label { min-width: 2.5em; text-align: center; }
+  .pop-close {
+    background: none; border: none; font-size: 1rem; cursor: pointer;
+    color: var(--text-muted); line-height: 1; padding: 0 2px; margin-left: 0.25rem;
+  }
+  .pop-close:hover { color: var(--text); }
+  .pop-meta {
+    padding: 0.25rem 0.85rem 0.4rem; font-size: 0.78rem;
+    color: var(--text-muted); border-bottom: 1px solid var(--border); font-style: italic;
+  }
+  .pop-meta:empty { display: none; }
+  .pop-body { padding: 0.6rem 0.85rem; max-height: 200px; overflow-y: auto; }
+  .pop-no-meaning { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
+  .meaning-list { list-style: none; font-size: 0.88rem; line-height: 1.5; }
+  .meaning-list li {
+    padding: 0.2rem 0; border-bottom: 1px solid #f0efec; display: flex; gap: 0.4rem;
+  }
+  .meaning-list li:last-child { border-bottom: none; }
+  .meaning-num { color: var(--text-muted); font-size: 0.75rem; min-width: 1.2em; padding-top: 0.1rem; }
+  .meaning-more {
+    font-size: 0.8rem; color: var(--accent); background: none; border: none;
+    cursor: pointer; padding: 0.2rem 0; display: block;
+  }
+  .meaning-more:hover { text-decoration: underline; }
+  .pop-footer {
+    padding: 0.5rem 0.85rem; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .audio-btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 50%;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.85rem; flex-shrink: 0; transition: opacity 0.15s;
+  }
+  .audio-btn:hover { opacity: 0.85; }
+  .audio-btn[data-state="error"] { background: #c0392b; }
+  .audio-btn[data-state="playing"] { background: #1f4a30; }
+  .lod-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-left: auto; }
+  .lod-link:hover { text-decoration: underline; }
+
+  footer {
+    text-align: center;
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Poterkëscht — Lauschteren &amp; Liesen</h1>
+  <span id="statusMsg"></span>
+  <div class="lang-group">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn"        data-lang="fr">FR</button>
+  </div>
+</header>
+
+<main>
+  <!-- ── List view ── -->
+  <div id="listView">
+    <div class="list-toolbar">
+      <input id="searchBox" type="search" placeholder="Sichen…">
+      <div id="levelChips"></div>
+    </div>
+    <div id="epList"></div>
+  </div>
+
+  <!-- ── Episode view ── -->
+  <div id="epView" style="display:none">
+    <button id="backBtn">← All Episoden</button>
+    <div class="ep-head">
+      <h2 id="epTitle"></h2>
+      <div class="ep-meta" id="epMeta"></div>
+    </div>
+    <audio id="epAudio" controls preload="none"></audio>
+    <div class="ext-links" id="epLinks"></div>
+    <div class="ep-intro" id="epIntro"></div>
+    <div class="transcript" id="epTranscript" style="display:none"></div>
+    <div class="no-transcript" id="epNoTranscript" style="display:none"></div>
+    <div class="legend" id="legend" style="display:none">
+      <span class="legend-item"><span class="swatch-found"></span>Wuert fonnt — klickt fir d'Bedeitung</span>
+      <span class="legend-item"><span class="swatch-inflected"></span>Konjugatioun oder Inflektioun</span>
+      <span class="legend-item"><span class="swatch-unknown">abc</span>Net am Wierderbuch</span>
+    </div>
+  </div>
+</main>
+
+<!-- Popover -->
+<div id="popover" role="tooltip">
+  <div class="pop-header">
+    <span class="pop-lemma" id="popLemma"></span>
+    <span class="pop-pos"   id="popPos"></span>
+    <span class="pop-nav" id="popNav">
+      <button class="pop-nav-btn" id="popPrev">◀</button>
+      <span   class="pop-nav-label" id="popNavLabel"></span>
+      <button class="pop-nav-btn" id="popNext">▶</button>
+    </span>
+    <button class="pop-close" id="popClose">✕</button>
+  </div>
+  <div class="pop-meta" id="popMeta"></div>
+  <div class="pop-body" id="popBody"></div>
+  <div class="pop-footer">
+    <button class="audio-btn" id="audioBtn" title="Play pronunciation" style="display:none">▶</button>
+    <a class="lod-link" id="lodLink" href="#" target="_blank">Open in LOD ↗</a>
+  </div>
+</div>
+
+<footer>
+  Podcast: <a href="https://creators.spotify.com/pod/profile/poterkescht/" target="_blank">Poterkëscht vum INLL</a> ·
+  Wierderbuch: <a href="https://lod.lu" target="_blank">LOD</a> (CC0) ·
+  <a href="https://zls.lu" target="_blank">Zenter fir d'Lëtzebuerger Sprooch</a>
+</footer>
+
+<script src="episodes.js"></script>
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let LANG = 'en';
+let DATA = null;
+let dataLoading = false;
+let dataLoaded  = { en: false, fr: false };
+let formsLoaded  = false;
+let formsLoading = false;
+let CURRENT_EP   = null;     // currently open episode object
+let LEVEL_FILTER = null;
+const MAX_SHOWN = 5;
+
+const EPISODES = window.PODCAST_EPISODES || [];
+
+const POS_LABELS = {
+  en: {
+    NOUN: 'Noun', VERB: 'Verb', ADJ: 'Adjective', ADV: 'Adverb',
+    PREP: 'Preposition', CONJ: 'Conjunction', PRON: 'Pronoun',
+    INTERJ: 'Interjection', NUM: 'Numeral', ART: 'Article', PART: 'Particle',
+  },
+  fr: {
+    NOUN: 'Nom', VERB: 'Verbe', ADJ: 'Adjectif', ADV: 'Adverbe',
+    PREP: 'Préposition', CONJ: 'Conjonction', PRON: 'Pronom',
+    INTERJ: 'Interjection', NUM: 'Numéral', ART: 'Article', PART: 'Particule',
+  },
+};
+function posLabel(code) {
+  return (POS_LABELS[LANG] || POS_LABELS.en)[code] || code || '';
+}
+
+// ── Dictionary loading (lazy — only when an episode is opened) ───────────────
+function loadData(lang, onReady) {
+  if (dataLoaded[lang]) {
+    DATA = lang === 'en' ? window.LOD_EN : window.LOD_FR;
+    if (onReady) onReady();
+    return;
+  }
+  if (dataLoading) return;
+  dataLoading = true;
+  setStatus('Loading dictionary…');
+  const script = document.createElement('script');
+  script.src   = lang === 'en' ? '../common_data/lod_en.js' : '../common_data/lod_fr.js';
+  script.onload = () => {
+    DATA = lang === 'en' ? window.LOD_EN : window.LOD_FR;
+    dataLoaded[lang] = true;
+    dataLoading = false;
+    setStatus('');
+    loadForms();
+    if (onReady) onReady();
+  };
+  script.onerror = () => {
+    dataLoading = false;
+    setStatus('Could not load dictionary.');
+  };
+  document.head.appendChild(script);
+}
+
+function loadForms() {
+  if (formsLoaded || formsLoading) return;
+  formsLoading = true;
+  const script = document.createElement('script');
+  script.src = '../common_data/lod_forms.js';
+  script.onload = () => {
+    formsLoaded  = true;
+    formsLoading = false;
+    if (CURRENT_EP) renderTranscript();   // re-render with inflection awareness
+  };
+  script.onerror = () => { formsLoading = false; };
+  document.head.appendChild(script);
+}
+
+function resolveKey(surfaceKey) {
+  if (DATA && DATA[surfaceKey]) return { key: surfaceKey, isInflected: false };
+  if (formsLoaded && window.LOD_FORMS) {
+    const base = window.LOD_FORMS[surfaceKey];
+    if (base && DATA && DATA[base]) return { key: base, isInflected: true };
+    const baseLower = window.LOD_FORMS[surfaceKey.toLowerCase()];
+    if (baseLower && DATA && DATA[baseLower]) return { key: baseLower, isInflected: true };
+  }
+  return { key: null, isInflected: false };
+}
+
+// ── Language buttons ──────────────────────────────────────────────────────────
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    LANG = btn.dataset.lang;
+    DATA = null;
+    dataLoaded[LANG] = false;
+    if (CURRENT_EP) loadData(LANG, renderTranscript);
+  });
+});
+
+// ── Tokenizer — extracts every word, ignoring surrounding punctuation ───────
+// Handles ..Jo..ma..nee, hyphenated words (E-Mail-Adress), Luxembourgish
+// clitics (d'Wieder, n'Apel) and typographic apostrophes (’).
+function tokenize(text) {
+  const norm = text.replace(/[’‘ʼ]/g, "'");      // 1:1 — indices stay aligned
+  const re = /[A-Za-zÀ-ɏ]+(?:-[A-Za-zÀ-ɏ]+)*(?:'(?=[A-Za-zÀ-ɏ]))?/g;
+  const tokens = [];
+  let last = 0, m;
+  while ((m = re.exec(norm)) !== null) {
+    if (m.index > last) tokens.push({ text: text.slice(last, m.index), isWord: false });
+    tokens.push({ text: text.slice(m.index, m.index + m[0].length), isWord: true });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) tokens.push({ text: text.slice(last), isWord: false });
+  return tokens;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Episode list ──────────────────────────────────────────────────────────────
+function fmtDuration(secs) {
+  if (!secs) return '';
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function renderList() {
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  const wrap = document.getElementById('epList');
+  let html = '';
+  for (const ep of EPISODES) {
+    if (LEVEL_FILTER && ep.level !== LEVEL_FILTER) continue;
+    if (q && !ep.title.toLowerCase().includes(q) &&
+        !(ep.transcript || '').toLowerCase().includes(q)) continue;
+    const tx = ep.transcript
+      ? '<span class="badge badge-tx">Transkript</span>'
+      : '<span class="badge badge-notx">keen Transkript</span>';
+    const lvl = ep.level ? `<span class="badge badge-level">${escapeHtml(ep.level)}</span>` : '';
+    html += `
+      <div class="ep-card" data-id="${encodeURIComponent(ep.id)}">
+        <div class="ep-main">
+          <div class="ep-title">${escapeHtml(ep.title)}</div>
+          <div class="ep-meta">${ep.date}${ep.duration ? ' · ' + fmtDuration(ep.duration) : ''}</div>
+        </div>
+        ${lvl} ${tx}
+      </div>`;
+  }
+  wrap.innerHTML = html || '<p style="color:var(--text-muted);font-size:0.9rem">Keng Episode fonnt.</p>';
+}
+
+function renderChips() {
+  const levels = [...new Set(EPISODES.map(e => e.level).filter(Boolean))].sort();
+  const wrap = document.getElementById('levelChips');
+  wrap.innerHTML = levels.map(l =>
+    `<button class="chip" data-level="${escapeHtml(l)}">${escapeHtml(l)}</button>`).join(' ');
+  wrap.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const lvl = chip.dataset.level;
+    LEVEL_FILTER = (LEVEL_FILTER === lvl) ? null : lvl;
+    wrap.querySelectorAll('.chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.level === LEVEL_FILTER));
+    renderList();
+  });
+}
+
+document.getElementById('searchBox').addEventListener('input', renderList);
+
+document.getElementById('epList').addEventListener('click', e => {
+  const card = e.target.closest('.ep-card');
+  if (!card) return;
+  location.hash = 'ep/' + card.dataset.id;
+});
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  location.hash = '';
+});
+
+// ── Episode view ──────────────────────────────────────────────────────────────
+function openEpisode(ep) {
+  CURRENT_EP = ep;
+  document.getElementById('listView').style.display = 'none';
+  document.getElementById('epView').style.display   = '';
+  document.getElementById('epTitle').textContent    = ep.title;
+
+  const metaBits = [ep.date];
+  if (ep.duration) metaBits.push(fmtDuration(ep.duration) + ' min');
+  document.getElementById('epMeta').textContent = metaBits.join(' · ');
+
+  const audio = document.getElementById('epAudio');
+  if (ep.audio) {
+    audio.style.display = '';
+    audio.src = ep.audio;
+  } else {
+    audio.style.display = 'none';
+    audio.removeAttribute('src');
+  }
+
+  document.getElementById('epLinks').innerHTML =
+    `<a href="${escapeHtml(ep.link)}" target="_blank">Op Spotify lauschteren ↗</a>`;
+
+  document.getElementById('epIntro').textContent = ep.intro || '';
+
+  const txDiv = document.getElementById('epTranscript');
+  const noTx  = document.getElementById('epNoTranscript');
+  if (ep.transcript) {
+    txDiv.style.display = '';
+    noTx.style.display  = 'none';
+    document.getElementById('legend').style.display = 'flex';
+    txDiv.innerHTML = '<em style="color:var(--text-muted)">Loading…</em>';
+    loadData(LANG, renderTranscript);
+  } else {
+    txDiv.style.display = 'none';
+    document.getElementById('legend').style.display = 'none';
+    noTx.style.display = '';
+    noTx.innerHTML =
+      `Den Transkript fir dës Episod ass um
+       <a href="https://learningspace.inll.lu/course/view.php?id=5497" target="_blank">
+       INLL Learning Space ↗</a> (klickt op “access as guest”).<br><br>
+       <strong>Fir en hei dranzesetzen:</strong> Text kopéieren →
+       als <code>transcripts/${escapeHtml(ep.id)}.txt</code> späicheren →
+       <code>python build_episodes.py</code> → commit &amp; push.`;
+  }
+  window.scrollTo(0, 0);
+}
+
+function showList() {
+  CURRENT_EP = null;
+  closePopover();
+  const audio = document.getElementById('epAudio');
+  audio.pause();
+  document.getElementById('epView').style.display   = 'none';
+  document.getElementById('listView').style.display = '';
+  setStatus('');
+}
+
+function renderTranscript() {
+  if (!CURRENT_EP || !CURRENT_EP.transcript || !DATA) return;
+  const tokens = tokenize(CURRENT_EP.transcript);
+  let found = 0, inflected = 0, unknown = 0, html = '';
+  for (const tok of tokens) {
+    if (!tok.isWord) { html += escapeHtml(tok.text); continue; }
+    const surface = tok.text.toLowerCase().replace(/[’‘ʼ]/g, "'");
+    const { key, isInflected } = resolveKey(surface);
+    if (key) {
+      found++;
+      if (isInflected) inflected++;
+      const cls = isInflected ? 'tok-found tok-inflected' : 'tok-found';
+      html += `<span class="${cls}" data-key="${encodeURIComponent(key)}">${escapeHtml(tok.text)}</span>`;
+    } else if (/^[A-Z]$/.test(tok.text)) {
+      html += escapeHtml(tok.text);          // speaker labels (A:, B:) — not errors
+    } else {
+      if (tok.text.trim()) unknown++;
+      html += `<span class="tok-unknown">${escapeHtml(tok.text)}</span>`;
+    }
+  }
+  document.getElementById('epTranscript').innerHTML = html;
+  const inflMsg = inflected ? ` (${inflected} via inflection)` : '';
+  setStatus(`${found.toLocaleString()} Wierder fonnt${inflMsg} · ${unknown.toLocaleString()} net am Wierderbuch`);
+}
+
+// ── Hash routing ──────────────────────────────────────────────────────────────
+function route() {
+  const m = location.hash.match(/^#ep\/(.+)$/);
+  if (m) {
+    const id = decodeURIComponent(m[1]);
+    const ep = EPISODES.find(e => e.id === id);
+    if (ep) { openEpisode(ep); return; }
+  }
+  showList();
+}
+window.addEventListener('hashchange', route);
+
+// ── Popover — identical to reader ─────────────────────────────────────────────
+const popover    = document.getElementById('popover');
+const popLemma   = document.getElementById('popLemma');
+const popPos     = document.getElementById('popPos');
+const popNav     = document.getElementById('popNav');
+const popNavLabel= document.getElementById('popNavLabel');
+const popMeta    = document.getElementById('popMeta');
+const popBody    = document.getElementById('popBody');
+const audioBtn   = document.getElementById('audioBtn');
+const lodLink    = document.getElementById('lodLink');
+let _audio = null;
+let _popEntries = [];
+let _popIdx     = 0;
+let _popAnchor  = null;
+
+function renderPopEntry() {
+  const entry = _popEntries[_popIdx];
+  const total = _popEntries.length;
+
+  popLemma.textContent = entry.lemma || '';
+  popPos.textContent   = posLabel(entry.pos);
+
+  let meta = '';
+  if ('pl' in entry) {
+    const gender = entry.g ? entry.g + ' ' : '';
+    const plural = entry.pl != null
+      ? `pl. ${entry.pl}`
+      : (LANG === 'fr' ? 'sans pluriel' : 'no plural');
+    meta = gender + plural;
+  } else if (entry.aux) {
+    meta = `aux. ${entry.aux}`;
+  }
+  popMeta.textContent = meta;
+
+  if (total > 1) {
+    popNavLabel.textContent = `${_popIdx + 1}/${total}`;
+    popNav.classList.add('visible');
+  } else {
+    popNav.classList.remove('visible');
+  }
+
+  const audioUrl = `https://lod.lu/uploads/AAC/${entry.id}.m4a`;
+  if (_audio) { _audio.pause(); _audio = null; }
+  audioBtn.dataset.url   = audioUrl;
+  audioBtn.dataset.state = '';
+  audioBtn.textContent   = '▶';
+  audioBtn.style.display = '';
+
+  lodLink.href = `https://lod.lu/artikel/${entry.id.toUpperCase()}`;
+
+  const items = entry.m || [];
+  if (items.length === 0) {
+    popBody.innerHTML = '<p class="pop-no-meaning">No meaning available.</p>';
+  } else {
+    const visible = items.slice(0, MAX_SHOWN);
+    const hidden  = items.slice(MAX_SHOWN);
+    const rows = visible.map((m, i) =>
+      `<li><span class="meaning-num">${items.length > 1 ? (i+1)+'.' : ''}</span>${escapeHtml(m)}</li>`
+    ).join('');
+    const more = hidden.length
+      ? `<button class="meaning-more" id="meaningMore">+ ${hidden.length} more</button>` : '';
+    popBody.innerHTML = `<ul class="meaning-list" id="meaningList">${rows}</ul>${more}`;
+    if (hidden.length) {
+      document.getElementById('meaningMore').addEventListener('click', function(e) {
+        e.stopPropagation();
+        const list = document.getElementById('meaningList');
+        hidden.forEach((m, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="meaning-num">${visible.length+i+1}.</span>${escapeHtml(m)}`;
+          list.appendChild(li);
+        });
+        this.remove();
+        repositionPopover(_popAnchor);
+      });
+    }
+  }
+  repositionPopover(_popAnchor);
+}
+
+function showPopover(key, anchorEl) {
+  const raw = DATA ? DATA[key] : null;
+  if (!raw) return;
+  const entries = Array.isArray(raw) ? raw : [raw];
+  if (entries.length === 0) return;
+  _popEntries = entries;
+  _popIdx     = 0;
+  _popAnchor  = anchorEl;
+  positionPopover(anchorEl);
+  renderPopEntry();
+}
+
+document.getElementById('popPrev').addEventListener('click', e => {
+  e.stopPropagation();
+  if (_popEntries.length < 2) return;
+  _popIdx = (_popIdx - 1 + _popEntries.length) % _popEntries.length;
+  renderPopEntry();
+});
+document.getElementById('popNext').addEventListener('click', e => {
+  e.stopPropagation();
+  if (_popEntries.length < 2) return;
+  _popIdx = (_popIdx + 1) % _popEntries.length;
+  renderPopEntry();
+});
+
+function positionPopover(anchorEl) {
+  popover.style.visibility = 'hidden';
+  popover.style.display    = 'block';
+  const ph = popover.offsetHeight;
+  const pw = popover.offsetWidth || 290;
+  popover.style.display    = 'none';
+  popover.style.visibility = '';
+
+  const rect   = anchorEl.getBoundingClientRect();
+  const margin = 8;
+  let left = rect.left;
+  if (left + pw > window.innerWidth - margin) left = window.innerWidth - pw - margin;
+  if (left < margin) left = margin;
+  let top = rect.bottom + margin;
+  if (top + ph > window.innerHeight - margin) top = rect.top - ph - margin;
+  if (top < margin) top = margin;
+
+  popover.style.left    = left + 'px';
+  popover.style.top     = top  + 'px';
+  popover.style.display = 'block';
+  popover._anchor = anchorEl;
+}
+
+function repositionPopover(anchorEl) {
+  if (popover.style.display !== 'none') positionPopover(anchorEl || popover._anchor);
+}
+
+function closePopover() {
+  if (_audio) { _audio.pause(); _audio = null; }
+  audioBtn.dataset.state = '';
+  audioBtn.textContent   = '▶';
+  popover.style.display  = 'none';
+  _popEntries = [];
+}
+
+document.getElementById('popClose').addEventListener('click', closePopover);
+document.addEventListener('click', e => {
+  if (!popover.contains(e.target) && !e.target.classList.contains('tok-found')) closePopover();
+});
+
+audioBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const url = audioBtn.dataset.url;
+  if (!url) return;
+  if (_audio) {
+    _audio.pause(); _audio = null;
+    if (audioBtn.dataset.state === 'playing') {
+      audioBtn.dataset.state = ''; audioBtn.textContent = '▶'; return;
+    }
+  }
+  _audio = new Audio(url);
+  audioBtn.dataset.state = 'loading';
+  audioBtn.textContent   = '…';
+  _audio.addEventListener('canplay',  () => { audioBtn.dataset.state = 'playing'; audioBtn.textContent = '■'; });
+  _audio.addEventListener('ended',    () => { audioBtn.dataset.state = ''; audioBtn.textContent = '▶'; _audio = null; });
+  _audio.play().catch(() => {
+    audioBtn.dataset.state = 'error'; audioBtn.textContent = '✕';
+    setTimeout(() => { audioBtn.dataset.state = ''; audioBtn.textContent = '▶'; }, 2000);
+  });
+});
+
+document.getElementById('epTranscript').addEventListener('click', e => {
+  const span = e.target.closest('.tok-found');
+  if (!span) { closePopover(); return; }
+  e.stopPropagation();
+  const key = decodeURIComponent(span.dataset.key);
+  showPopover(key, span);
+});
+
+function setStatus(msg) {
+  document.getElementById('statusMsg').textContent = msg;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderChips();
+renderList();
+route();
+</script>
+</body>
+</html>
