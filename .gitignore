@@ -1,4 +1,4 @@
 __pycache__/
 *.pyc
-podcast/rss_cache.xml
-podcast/transcripts
+inll-podcast-with-transcript-highlight/rss_cache.xml
+inll-podcast-with-transcript-highlight/transcripts

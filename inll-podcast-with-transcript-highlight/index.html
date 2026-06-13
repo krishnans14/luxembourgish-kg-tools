@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Poterkëscht — Podcast mat Transkripter</title>
+<title>Poterkëscht — Podcast mat Transkripter a Bedeitungen</title>
 <style>
   :root {
     --bg:         #f8f7f4;
@@ -139,9 +139,20 @@
   #backBtn:hover { text-decoration: underline; }
 
   .ep-head h2 { font-size: 1.25rem; margin-bottom: 0.25rem; }
-  .ep-head .ep-meta { margin-bottom: 0.9rem; }
+  .ep-head .ep-meta { margin-bottom: 0.5rem; }
 
-  audio { width: 100%; margin: 0.4rem 0 0.6rem; }
+  .sticky-player {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    padding: 0.85rem 0 0.9rem;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    margin-bottom: 0.9rem;
+  }
+
+  audio { width: 100%; margin: 0; }
 
   .ext-links { font-size: 0.82rem; margin-bottom: 1rem; }
   .ext-links a { color: var(--accent); }
@@ -302,12 +313,44 @@
     border-top: 1px solid var(--border);
   }
   footer a { color: var(--accent); }
+
+  /* ── Notice banner ── */
+  .notice-banner {
+    background: var(--accent-light);
+    border: 1px solid #b8dfc9;
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: var(--text);
+  }
+  .notice-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.1rem 0;
+  }
+  .notice-flag {
+    width: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border-radius: 2px;
+  }
+  .notice-divider {
+    border: none;
+    border-top: 1px solid #b8dfc9;
+    margin: 0.55rem 0;
+  }
+  .notice-request { color: var(--text-muted); }
+  .notice-request a { color: var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Poterkëscht — Lauschteren &amp; Liesen</h1>
+  <h1>Poterkëscht — Lauschteren, Liesen &amp; Bedeitungen</h1>
   <span id="statusMsg"></span>
   <div class="lang-group">
     <button class="lang-btn active" data-lang="en">EN</button>
@@ -316,6 +359,33 @@
 </header>
 
 <main>
+  <div class="notice-banner">
+    <div class="notice-row">
+      <img class="notice-flag" src="https://flagcdn.com/w40/lu.png" alt="LU">
+      <span>D'Bedeitunge sinn op Wuertniveau — trennbar Wierder ginn net gutt iwwersat.</span>
+    </div>
+    <div class="notice-row">
+      <img class="notice-flag" src="https://flagcdn.com/w40/gb.png" alt="EN">
+      <span>Meanings are at the word level — separable words may not translate well.</span>
+    </div>
+    <div class="notice-row">
+      <img class="notice-flag" src="https://flagcdn.com/w40/fr.png" alt="FR">
+      <span>Le sens est au niveau du mot — les mots séparables peuvent mal se traduire.</span>
+    </div>
+    <hr class="notice-divider">
+    <div class="notice-row notice-request">
+      <img class="notice-flag" src="https://flagcdn.com/w40/lu.png" alt="LU">
+      <span>Feelt en Transkript? Schreift dem Admin fir en unzefroen.</span>
+    </div>
+    <div class="notice-row notice-request">
+      <img class="notice-flag" src="https://flagcdn.com/w40/gb.png" alt="EN">
+      <span>Missing a transcript? Contact the admin to request one.</span>
+    </div>
+    <div class="notice-row notice-request">
+      <img class="notice-flag" src="https://flagcdn.com/w40/fr.png" alt="FR">
+      <span>Une transcription manque ? Contactez l'admin pour en faire la demande.</span>
+    </div>
+  </div>
   <!-- ── List view ── -->
   <div id="listView">
     <div class="list-toolbar">
@@ -328,11 +398,13 @@
   <!-- ── Episode view ── -->
   <div id="epView" style="display:none">
     <button id="backBtn">← All Episoden</button>
-    <div class="ep-head">
-      <h2 id="epTitle"></h2>
-      <div class="ep-meta" id="epMeta"></div>
+    <div class="sticky-player">
+      <div class="ep-head">
+        <h2 id="epTitle"></h2>
+        <div class="ep-meta" id="epMeta"></div>
+      </div>
+      <audio id="epAudio" controls preload="none"></audio>
     </div>
-    <audio id="epAudio" controls preload="none"></audio>
     <div class="ext-links" id="epLinks"></div>
     <div class="ep-intro" id="epIntro"></div>
     <div class="transcript" id="epTranscript" style="display:none"></div>
@@ -382,6 +454,7 @@ let formsLoaded  = false;
 let formsLoading = false;
 let CURRENT_EP   = null;     // currently open episode object
 let LEVEL_FILTER = null;
+let listScrollY  = 0;        // saved scroll position for back-navigation
 const MAX_SHOWN = 5;
 
 const EPISODES = window.PODCAST_EPISODES || [];
@@ -548,6 +621,7 @@ document.getElementById('backBtn').addEventListener('click', () => {
 
 // ── Episode view ──────────────────────────────────────────────────────────────
 function openEpisode(ep) {
+  listScrollY = window.scrollY;          // remember where we were in the list
   CURRENT_EP = ep;
   document.getElementById('listView').style.display = 'none';
   document.getElementById('epView').style.display   = '';
@@ -602,6 +676,7 @@ function showList() {
   document.getElementById('epView').style.display   = 'none';
   document.getElementById('listView').style.display = '';
   setStatus('');
+  requestAnimationFrame(() => window.scrollTo(0, listScrollY));
 }
 
 function renderTranscript() {
