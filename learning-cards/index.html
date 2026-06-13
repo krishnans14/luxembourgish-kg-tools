@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="lb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Cards — Lëtzebuergesch</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f5f2eb;
+  --surface:   #faf8f3;
+  --border:    #ddd8cc;
+  --text:      #1a1a18;
+  --muted:     #6b6860;
+  --accent:    #2a5c3f;
+  --accent-lt: #e8f2ec;
+  --danger:    #b94040;
+  --danger-lt: #fdf0f0;
+  --target-bg: #d6d3cc;
+  --serif:     'Source Serif 4', Georgia, serif;
+  --mono:      'DM Mono', monospace;
+  --radius:    10px;
+  --pop-shadow: 0 6px 24px rgba(0,0,0,0.13);
+}
+
+html, body { height: 100%; }
+body {
+  font-family: var(--serif);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Nav ── */
+nav {
+  max-width: 740px; width: 100%; margin: 0 auto;
+  padding: 1.1rem 1.5rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+nav a { color: var(--muted); text-decoration: none; }
+nav a:hover { color: var(--accent); }
+nav .sep { opacity: 0.4; }
+
+/* ── Screens ── */
+.screen { display: none; flex: 1; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ═══════════════════════════════════════════════════════
+   SETUP SCREEN
+════════════════════════════════════════════════════════ */
+#setup {
+  align-items: center; justify-content: center;
+  padding: 2rem 1.5rem 5rem;
+}
+.setup-inner { max-width: 540px; width: 100%; }
+
+.setup-title {
+  font-size: 1.8rem; font-weight: 300;
+  letter-spacing: -0.02em; margin-bottom: 0.4rem;
+}
+.setup-title em { font-style: italic; color: var(--accent); }
+.setup-sub {
+  font-size: 0.9rem; color: var(--muted);
+  margin-bottom: 0.5rem; line-height: 1.55;
+}
+
+.option-group { margin-bottom: 1.8rem; }
+.option-label {
+  font-family: var(--mono); font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); margin-bottom: 0.75rem;
+}
+.option-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+.opt-btn {
+  flex: 1; min-width: 110px;
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: var(--radius); padding: 0.85rem 1rem;
+  cursor: pointer; text-align: left; font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.opt-btn:hover { border-color: var(--accent); }
+.opt-btn.selected { border-color: var(--accent); background: var(--accent-lt); }
+.opt-btn .opt-name { font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 0.2rem; }
+.opt-btn .opt-desc { font-family: var(--mono); font-size: 0.67rem; color: var(--muted); }
+.opt-btn.selected .opt-desc { color: var(--accent); }
+
+.start-btn {
+  width: 100%; background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius);
+  padding: 1rem; font-family: var(--serif);
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+  transition: opacity 0.15s; margin-top: 0.5rem;
+}
+.start-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.start-btn:not(:disabled):hover { opacity: 0.86; }
+
+/* ═══════════════════════════════════════════════════════
+   GAME SCREEN
+════════════════════════════════════════════════════════ */
+#game { padding: 0 1.5rem 2rem; }
+.game-inner {
+  max-width: 640px; width: 100%; margin: 0 auto;
+  padding-top: 1.4rem; flex: 1; display: flex; flex-direction: column;
+}
+
+/* Top bar */
+.game-topbar {
+  display: flex; align-items: center; gap: 0.55rem;
+  margin-bottom: 1rem; flex-wrap: wrap;
+}
+.badge {
+  font-family: var(--mono); font-size: 0.65rem;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.25rem 0.55rem; color: var(--muted);
+}
+.badge.accent { background: var(--accent-lt); border-color: var(--accent); color: var(--accent); }
+.progress-text {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+  margin-left: auto;
+}
+
+/* Prominent Finish button */
+.finish-btn {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-family: var(--mono); font-size: 0.72rem;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 6px; padding: 0.4rem 0.85rem;
+  color: var(--text); cursor: pointer; font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+.finish-btn:hover { background: var(--danger-lt); border-color: var(--danger); color: var(--danger); }
+
+/* Score row */
+.score-bar {
+  display: flex; gap: 1rem; margin-bottom: 1.2rem;
+  font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+  align-items: center;
+}
+.s-c { color: var(--accent); font-weight: 600; }
+.s-w { color: var(--danger); font-weight: 600; }
+
+/* Card */
+.card-area {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.8rem 1.8rem 1.6rem;
+  margin-bottom: 1.2rem; flex: 1; display: flex; flex-direction: column; gap: 1.4rem;
+}
+
+.pos-hint {
+  font-family: var(--mono); font-size: 0.65rem;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+}
+
+/* Sentence row: audio btn + text */
+.sentence-row { display: flex; align-items: flex-start; gap: 0.85rem; }
+
+.sentence-audio-btn {
+  flex-shrink: 0; width: 38px; height: 38px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 50%; cursor: pointer;
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.15s, background 0.15s;
+  margin-top: 0.1rem;
+}
+.sentence-audio-btn:hover { opacity: 0.85; }
+.sentence-audio-btn[data-state="playing"] { background: #1f4a30; }
+.sentence-audio-btn[data-state="error"]   { background: var(--danger); }
+.sentence-audio-btn[data-state="loading"] { opacity: 0.6; }
+.sentence-audio-btn.hidden { visibility: hidden; }
+
+.sentence {
+  font-size: 1.3rem; font-weight: 300;
+  line-height: 1.75; letter-spacing: -0.01em;
+}
+
+/* Target word tokens — gray before answer, green + clickable after */
+.w-target {
+  background: var(--target-bg); border-radius: 3px;
+  padding: 0 0.12em; font-weight: 400; cursor: default;
+  display: inline; transition: background 0.2s;
+}
+.w-target.revealed {
+  background: var(--accent-lt); border-bottom: 1px solid var(--accent);
+  cursor: pointer;
+}
+.w-target.revealed:hover { background: #c8e3d0; }
+
+/* Clickable known words */
+.w-known {
+  cursor: pointer; border-bottom: 1px dotted var(--muted);
+  transition: border-color 0.1s, color 0.1s;
+}
+.w-known:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── Flashcard answer area ── */
+.answer-area {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  display: none; flex-direction: column; gap: 0.3rem;
+}
+.answer-area.visible { display: flex; }
+.answer-label { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.answer-lemma {
+  font-size: 1rem; font-weight: 600; color: var(--accent);
+  cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;
+  border-bottom: 1px dotted var(--accent);
+}
+.answer-lemma:hover { opacity: 0.8; }
+.answer-meaning { font-size: 1.1rem; color: var(--text); line-height: 1.4; }
+
+/* Reveal button */
+.reveal-btn {
+  align-self: flex-start;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 0.7rem 1.5rem;
+  font-family: var(--serif); font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.reveal-btn:hover { opacity: 0.84; }
+.reveal-btn.hidden { display: none; }
+
+/* Self-mark buttons */
+.self-mark { display: none; gap: 0.7rem; }
+.self-mark.visible { display: flex; }
+.mark-btn {
+  flex: 1; padding: 0.75rem;
+  border-radius: var(--radius); border: 2px solid var(--border);
+  background: var(--surface); font-family: var(--serif);
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.mark-btn.correct { border-color: var(--accent); color: var(--accent); }
+.mark-btn.correct:hover { background: var(--accent-lt); }
+.mark-btn.wrong   { border-color: var(--danger);  color: var(--danger);  }
+.mark-btn.wrong:hover   { background: var(--danger-lt); }
+
+/* ── MCQ options ── */
+.mcq-options { display: none; flex-direction: column; gap: 0.5rem; }
+.mcq-options.visible { display: flex; }
+
+.mcq-option {
+  padding: 0.78rem 1rem;
+  border-radius: var(--radius); border: 2px solid var(--border);
+  background: var(--surface); font-family: var(--serif);
+  font-size: 0.95rem; cursor: pointer; text-align: left;
+  transition: border-color 0.12s, background 0.12s; font-weight: 400;
+}
+.mcq-option:not(.locked):hover { border-color: var(--accent); background: var(--accent-lt); }
+.mcq-option.locked { cursor: default; }
+.mcq-option.is-correct { border-color: var(--accent) !important; background: var(--accent-lt) !important; color: var(--accent); font-weight: 600; }
+.mcq-option.is-wrong   { border-color: var(--danger) !important; background: var(--danger-lt) !important; color: var(--danger); }
+
+/* MCQ next button (appears after answering) */
+.mcq-next-btn {
+  display: none; align-self: flex-end;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 8px; padding: 0.7rem 1.8rem;
+  font-family: var(--serif); font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.mcq-next-btn.visible { display: block; }
+.mcq-next-btn:hover { opacity: 0.84; }
+
+/* ── Game nav ── */
+.game-nav {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding-top: 0.3rem;
+}
+.nav-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.6rem 1.3rem;
+  font-family: var(--mono); font-size: 0.75rem;
+  cursor: pointer; color: var(--text);
+  transition: border-color 0.12s;
+}
+.nav-btn:hover:not(:disabled) { border-color: var(--accent); }
+.nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.nav-spacer { flex: 1; }
+
+/* ═══════════════════════════════════════════════════════
+   RESULTS SCREEN
+════════════════════════════════════════════════════════ */
+#results {
+  align-items: center; justify-content: center;
+  padding: 2rem 1.5rem 5rem;
+}
+.results-inner { max-width: 480px; width: 100%; }
+.results-title {
+  font-size: 1.7rem; font-weight: 300;
+  letter-spacing: -0.02em; margin-bottom: 2rem;
+}
+.results-title em { font-style: italic; color: var(--accent); }
+
+.score-display {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 2rem; margin-bottom: 1.8rem;
+}
+.score-big { font-size: 3.2rem; font-weight: 600; color: var(--accent); line-height: 1; }
+.score-label { font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.3rem; margin-bottom: 1.2rem; }
+.score-breakdown { display: flex; gap: 2rem; font-family: var(--mono); font-size: 0.8rem; }
+.score-breakdown > div { display: flex; flex-direction: column; gap: 0.15rem; }
+.score-breakdown strong { font-size: 1.1rem; }
+.score-breakdown span { color: var(--muted); font-size: 0.72rem; }
+
+.results-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.action-btn {
+  flex: 1; min-width: 130px; padding: 0.9rem 1rem;
+  border-radius: var(--radius); border: 2px solid var(--border);
+  background: var(--surface); font-family: var(--serif);
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  text-align: center; text-decoration: none; color: var(--text);
+  display: block; transition: border-color 0.15s;
+}
+.action-btn:hover { border-color: var(--accent); }
+.action-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.action-btn.primary:hover { opacity: 0.86; }
+
+/* ═══════════════════════════════════════════════════════
+   POPOVER  (matches reader style exactly)
+════════════════════════════════════════════════════════ */
+#popover {
+  display: none; position: fixed; z-index: 1000;
+  width: 290px; background: #fff;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--pop-shadow); overflow: hidden;
+}
+
+.pop-header {
+  padding: 0.6rem 0.85rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap;
+}
+.pop-lemma { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.pop-pos   { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.pop-nav { display: none; align-items: center; gap: 0.2rem; margin-left: auto; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.pop-nav.visible { display: flex; }
+.pop-nav-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 3px; padding: 0.1rem 0.35rem;
+  cursor: pointer; font-size: 0.7rem; color: var(--muted); line-height: 1.4;
+  transition: border-color 0.1s, color 0.1s;
+}
+.pop-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pop-nav-label { min-width: 2.5em; text-align: center; }
+.pop-close {
+  background: none; border: none; font-size: 1rem; cursor: pointer;
+  color: var(--muted); line-height: 1; padding: 0 2px; margin-left: 0.25rem;
+}
+.pop-close:hover { color: var(--text); }
+
+.pop-meta {
+  padding: 0.25rem 0.85rem 0.4rem; font-size: 0.78rem;
+  color: var(--muted); border-bottom: 1px solid var(--border); font-style: italic;
+}
+.pop-meta:empty { display: none; }
+
+.pop-body { padding: 0.6rem 0.85rem; max-height: 200px; overflow-y: auto; }
+.pop-no-meaning { color: var(--muted); font-size: 0.85rem; font-style: italic; }
+
+.meaning-list { list-style: none; font-size: 0.88rem; line-height: 1.5; }
+.meaning-list li {
+  padding: 0.2rem 0; border-bottom: 1px solid #f0efec;
+  display: flex; gap: 0.4rem;
+}
+.meaning-list li:last-child { border-bottom: none; }
+.meaning-num { color: var(--muted); font-size: 0.75rem; min-width: 1.2em; padding-top: 0.1rem; }
+.meaning-more {
+  font-size: 0.8rem; color: var(--accent);
+  background: none; border: none; cursor: pointer;
+  padding: 0.2rem 0; display: block;
+}
+.meaning-more:hover { text-decoration: underline; }
+
+.pop-footer {
+  padding: 0.5rem 0.85rem; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.audio-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 50%; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.85rem; flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.audio-btn:hover { opacity: 0.85; }
+.audio-btn[data-state="error"]   { background: var(--danger); }
+.audio-btn[data-state="playing"] { background: #1f4a30; }
+.lod-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-left: auto; }
+.lod-link:hover { text-decoration: underline; }
+
+/* ── Setup sub paragraphs ── */
+.setup-sub { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+
+/* ── Topic select ── */
+.topic-select {
+  width: 100%; padding: 0.75rem 1rem;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); font-family: var(--serif);
+  font-size: 0.95rem; color: var(--text); cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6860' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 1rem center;
+  padding-right: 2.5rem; transition: border-color 0.15s;
+}
+.topic-select:focus { outline: none; border-color: var(--accent); }
+.topic-select:hover { border-color: var(--accent); }
+
+@media (max-width: 520px) {
+  .sentence { font-size: 1.1rem; }
+  .card-area { padding: 1.4rem 1.2rem; }
+  .setup-title { font-size: 1.4rem; }
+  .sentence-audio-btn { width: 32px; height: 32px; font-size: 0.85rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="https://krishnans14.github.io/luxembourgish/index.html">Lëtzebuergesch</a>
+  <span class="sep">/</span>
+  <span>Learning Cards</span>
+</nav>
+
+<!-- ═══════════ SETUP ═══════════ -->
+<div id="setup" class="screen active">
+  <div class="setup-inner">
+    <h1 class="setup-title">Word <em>Flashcards</em></h1>
+    <p class="setup-sub"><img src="https://flagcdn.com/w20/lu.png" width="16" alt="LU" style="vertical-align:-2px;margin-right:0.35em"> Léiert Wierder aus LOD-Beispillsätz. Wielt den Niveauberäich, de Sujet an Zort ven der Kaart </p>
+    <p class="setup-sub" style="margin-top:0.5rem"><img src="https://flagcdn.com/w20/gb.png" width="16" alt="EN" style="vertical-align:-2px;margin-right:0.35em"> Learn vocabulary from LOD example sentences. Pick a level, a topic and the type of the cards.</p>
+    <p class="setup-sub" style="margin-top:0.5rem"><img src="https://flagcdn.com/w20/fr.png" width="16" alt="FR" style="vertical-align:-2px;margin-right:0.35em"> Apprenez du vocabulaire à partir de phrases LOD. Choisissez un niveau, un sujet et le type de carte.</p>
+
+    <div class="option-group">
+      <div class="option-label">Language</div>
+      <div class="option-row" id="lang-opts">
+        <button class="opt-btn" data-value="en" onclick="selectOpt(this,'lang')">
+          <span class="opt-name">English</span>
+          <span class="opt-desc">Translate to English</span>
+        </button>
+        <button class="opt-btn" data-value="fr" onclick="selectOpt(this,'lang')">
+          <span class="opt-name">Français</span>
+          <span class="opt-desc">Traduire en Français</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="option-group">
+      <div class="option-label">Level</div>
+      <div class="option-row" id="level-opts">
+        <button class="opt-btn" data-value="a1" onclick="selectOpt(this,'level')">
+          <span class="opt-name">A1</span>
+          <span class="opt-desc">Beginner · 691 words</span>
+        </button>
+        <button class="opt-btn" data-value="a2" onclick="selectOpt(this,'level')">
+          <span class="opt-name">A2</span>
+          <span class="opt-desc">A1 + A2 · 1,656 words</span>
+        </button>
+        <button class="opt-btn" data-value="b" onclick="selectOpt(this,'level')">
+          <span class="opt-name">B+</span>
+          <span class="opt-desc">Full dictionary · by topic</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="option-group" id="topic-group" style="display:none">
+      <div class="option-label" id="topic-label">Topic</div>
+      <select class="topic-select" id="topic-select" onchange="selectTopic(this.value)">
+        <option value="">All topics</option>
+      </select>
+    </div>
+
+    <div class="option-group">
+      <div class="option-label">Mode</div>
+      <div class="option-row" id="mode-opts">
+        <button class="opt-btn" data-value="flashcard" onclick="selectOpt(this,'mode')">
+          <span class="opt-name">Flashcard</span>
+          <span class="opt-desc">Reveal &amp; self-mark</span>
+        </button>
+        <button class="opt-btn" data-value="mcq" onclick="selectOpt(this,'mode')">
+          <span class="opt-name">Multiple Choice</span>
+          <span class="opt-desc">Pick from 4 options</span>
+        </button>
+      </div>
+    </div>
+
+    <button class="start-btn" id="start-btn" disabled onclick="startGame()">Start →</button>
+  </div>
+</div>
+
+<!-- ═══════════ GAME ═══════════ -->
+<div id="game" class="screen">
+  <div class="game-inner">
+
+    <div class="game-topbar">
+      <span class="badge accent" id="badge-level"></span>
+      <span class="badge" id="badge-mode"></span>
+      <span class="badge" id="badge-lang"></span>
+      <span class="badge" id="badge-topic" style="display:none"></span>
+      <span class="progress-text" id="progress-text"></span>
+      <button class="finish-btn" onclick="finishGame()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Finish session
+      </button>
+    </div>
+    <p class="setup-sub"><img src="https://flagcdn.com/w20/lu.png" width="16" alt="LU" style="vertical-align:-2px;margin-right:0.35em"> Klickt op d'Wuert fir d'Bedeitung ze gesinn.</p>
+    <p class="setup-sub" style="margin-top:0.5rem"><img src="https://flagcdn.com/w20/gb.png" width="16" alt="EN" style="vertical-align:-2px;margin-right:0.35em"> Click any word to see its meaning.</p>
+    <p class="setup-sub" style="margin-top:0.5rem"><img src="https://flagcdn.com/w20/fr.png" width="16" alt="FR" style="vertical-align:-2px;margin-right:0.35em"> Cliquez sur un mot pour en voir le sens.</p>
+    <div class="score-bar">
+      <span>Score:</span>
+      <span class="s-c" id="score-correct">✓ 0</span>
+      <span class="s-w" id="score-wrong">✗ 0</span>
+    </div>
+
+    <div class="card-area">
+      <div class="pos-hint" id="pos-hint"></div>
+
+      <div class="sentence-row">
+        <button class="sentence-audio-btn hidden" id="sentence-audio-btn" title="Play sentence audio">▶</button>
+        <div class="sentence" id="sentence"></div>
+      </div>
+
+      <!-- Flashcard answer -->
+      <button class="reveal-btn hidden" id="reveal-btn" onclick="revealAnswer()">Reveal answer</button>
+      <div class="answer-area" id="answer-area">
+        <div class="answer-label">Answer</div>
+        <div class="answer-lemma" id="answer-lemma" onclick="openTargetPopover(this)"></div>
+        <div class="answer-meaning" id="answer-meaning"></div>
+      </div>
+      <div class="self-mark" id="self-mark">
+        <button class="mark-btn correct" onclick="markAnswer(true)">✓ Got it</button>
+        <button class="mark-btn wrong"   onclick="markAnswer(false)">✗ Missed it</button>
+      </div>
+
+      <!-- MCQ -->
+      <div class="mcq-options" id="mcq-options"></div>
+      <button class="mcq-next-btn" id="mcq-next-btn" onclick="advanceFromMCQ()">Next →</button>
+    </div>
+
+    <div class="game-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)" disabled>← Prev</button>
+      <span class="nav-spacer"></span>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ RESULTS ═══════════ -->
+<div id="results" class="screen">
+  <div class="results-inner">
+    <h1 class="results-title">Session <em>complete</em></h1>
+    <div class="score-display">
+      <div class="score-big" id="res-pct">—</div>
+      <div class="score-label">Correct</div>
+      <div class="score-breakdown">
+        <div><strong class="s-c" id="res-correct">0</strong><span>Correct</span></div>
+        <div><strong class="s-w" id="res-wrong">0</strong><span>Wrong</span></div>
+        <div><strong id="res-skipped">0</strong><span>Skipped</span></div>
+        <div><strong id="res-total">0</strong><span>Shown</span></div>
+      </div>
+    </div>
+    <div class="results-actions">
+      <button class="action-btn primary" onclick="replayGame()">Play again</button>
+      <a class="action-btn" href="../index.html">← Home</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer style="margin-top:3rem;padding:1.2rem 1.5rem;font-size:0.72rem;font-family:var(--mono);color:var(--muted);text-align:center;line-height:1.9;border-top:1px solid var(--border)">
+  Wierder: <a href="https://lod.lu" target="_blank" style="color:var(--muted)">Lëtzebuerger Online Dictionnaire (LOD)</a> (CC0) &middot;
+  <a href="https://zls.lu" target="_blank" style="color:var(--muted)">Zenter fir d'Lëtzebuerger Sprooch</a>
+</footer>
+
+<!-- ═══════════ POPOVER ═══════════ -->
+<div id="popover" role="tooltip">
+  <div class="pop-header">
+    <span class="pop-lemma" id="popLemma"></span>
+    <span class="pop-pos"   id="popPos"></span>
+    <span class="pop-nav"   id="popNav">
+      <button class="pop-nav-btn" id="popPrev">◀</button>
+      <span   class="pop-nav-label" id="popNavLabel"></span>
+      <button class="pop-nav-btn" id="popNext">▶</button>
+    </span>
+    <button class="pop-close" id="popClose">✕</button>
+  </div>
+  <div class="pop-meta" id="popMeta"></div>
+  <div class="pop-body" id="popBody"></div>
+  <div class="pop-footer">
+    <button class="audio-btn" id="popAudioBtn" title="Play pronunciation">▶</button>
+    <a class="lod-link" id="popLodLink" href="#" target="_blank">Open in LOD ↗</a>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
+const S = {
+  lang:    null,   // 'en' | 'fr'
+  level:   null,   // 'a1' | 'a2' | 'b'
+  topic:   null,   // category code (required for B+; optional for A1/A2)
+  mode:    null,   // 'flashcard' | 'mcq'
+  words:   [],
+  idx:     0,
+  cardIdx: 0,
+  answered: false,
+  scores:  [],
+  seed:    0,
+};
+
+// ════════════════════════════════════════════════════════════════
+//  SEEDED PRNG  (splitmix32)
+// ════════════════════════════════════════════════════════════════
+function makePRNG(seed) {
+  let s = seed >>> 0;
+  return function() {
+    s = (s + 0x9e3779b9) >>> 0;
+    let t = s ^ (s >>> 16);
+    t = Math.imul(t, 0x21f0aaad) >>> 0;
+    t = (t ^ (t >>> 15)) >>> 0;
+    t = Math.imul(t, 0x735a2d97) >>> 0;
+    return ((t ^ (t >>> 15)) >>> 0) / 4294967296;
+  };
+}
+function shuffle(arr, rng) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function getDailySeed() {
+  const now    = new Date();
+  const date   = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  const minute = now.getHours() * 60 + now.getMinutes();
+  const slot   = Math.floor(minute / 5);   // changes every 5 minutes
+  return (date * 1000 + slot) >>> 0;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════════════════════════
+function selectOpt(btn, group) {
+  document.querySelectorAll(`#${group}-opts .opt-btn`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  S[group] = btn.dataset.value;
+  if (group === 'level') { S.topic = null; updateTopicOptions(); }
+  checkStartReady();
+}
+
+function checkStartReady() {
+  const topicRequired = S.level === 'b';
+  document.getElementById('start-btn').disabled =
+    !(S.lang && S.level && S.mode && (!topicRequired || S.topic));
+}
+
+function selectTopic(value) {
+  S.topic = value || null;
+  checkStartReady();
+}
+
+function updateTopicOptions() {
+  const sel   = document.getElementById('topic-select');
+  const label = document.getElementById('topic-label');
+  const group = document.getElementById('topic-group');
+  sel.innerHTML = '';
+
+  if (!window.FLASHCARD_DATA) {
+    loadScript('../common_data/learning_cards/flashcard_data.js', updateTopicOptions);
+    return;
+  }
+
+  if (S.level === 'b') {
+    // B+: categories come from FC_B_CATS metadata; topic is required (no "All" option)
+    label.innerHTML = 'Topic <span style="font-family:var(--mono);font-size:0.75em;color:var(--danger)">required</span>';
+    const meta = window.FC_B_CATS || {};
+    const cats = Object.entries(meta)
+      .map(([code, m]) => ({ code, label: m.label, n: m.n }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    const placeholder = document.createElement('option');
+    placeholder.value = ''; placeholder.textContent = '— pick a topic —';
+    sel.appendChild(placeholder);
+    cats.forEach(({ code, label: lbl, n }) => {
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = `${lbl} (${n})`;
+      sel.appendChild(opt);
+    });
+    group.style.display = cats.length > 0 ? 'block' : 'none';
+
+  } else {
+    // A1/A2: categories from FC_CATS counted in pool; "All topics" is default
+    label.innerHTML = 'Topic <span style="text-transform:none;letter-spacing:0;font-size:1em;opacity:0.7">(optional)</span>';
+    const data = window.FLASHCARD_DATA;
+    const pool = S.level === 'a1' ? data.a1 : [...data.a1, ...data.a2];
+    const cats = window.FC_CATS || {};
+
+    const counts = {};
+    pool.forEach(w => (w.cats || []).forEach(code => {
+      counts[code] = (counts[code] || 0) + 1;
+    }));
+    const usable = Object.entries(counts)
+      .filter(([, n]) => n >= 6)
+      .map(([code, n]) => ({ code, n, label: cats[code] || code }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    const allOpt = document.createElement('option');
+    allOpt.value = ''; allOpt.textContent = 'All topics';
+    sel.appendChild(allOpt);
+    usable.forEach(({ code, n, label: lbl }) => {
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = `${lbl} (${n})`;
+      sel.appendChild(opt);
+    });
+    group.style.display = usable.length > 0 ? 'block' : 'none';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DATA LOADING
+// ════════════════════════════════════════════════════════════════
+function loadScript(src, cb) {
+  const sc = document.createElement('script');
+  sc.src = src; sc.onload = cb || function(){};
+  sc.onerror = () => console.warn('Could not load', src);
+  document.head.appendChild(sc);
+}
+
+let lodLoaded = { en: false, fr: false };
+
+function loadLodData(lang, cb) {
+  if (lodLoaded[lang]) { if (cb) cb(); return; }
+  const var_  = lang === 'en' ? 'LOD_EN' : 'LOD_FR';
+  if (window[var_]) { lodLoaded[lang] = true; if (cb) cb(); return; }
+  loadScript(`../common_data/lod_${lang}.js`, () => {
+    lodLoaded[lang] = true;
+    if (cb) cb();
+  });
+}
+function loadFormsData() {
+  if (window.LOD_FORMS) return;
+  loadScript('../common_data/lod_forms.js');
+}
+
+function lodData() {
+  return S.lang === 'fr' ? window.LOD_FR : window.LOD_EN;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  START GAME
+// ════════════════════════════════════════════════════════════════
+function startGame() {
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('start-btn').textContent = 'Loading…';
+
+  function go() {
+    let pool;
+
+    if (S.level === 'b') {
+      // B+: pull from the loaded category file
+      pool = (window.FC_B || {})[S.topic] || [];
+    } else {
+      const data = window.FLASHCARD_DATA;
+      pool = S.level === 'a1' ? data.a1 : [...data.a1, ...data.a2];
+      if (S.topic) pool = pool.filter(w => (w.cats || []).includes(S.topic));
+    }
+
+    if (!pool.length) {
+      alert('No words found for this selection. Please try a different topic.');
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('start-btn').textContent = 'Start →';
+      return;
+    }
+
+    S.seed   = getDailySeed();
+    const rng = makePRNG(S.seed);
+    S.words  = shuffle(pool, rng);
+    S.idx    = 0;
+    S.scores = new Array(S.words.length).fill(null);
+
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('start-btn').textContent = 'Start →';
+
+    showScreen('game');
+    loadLodData(S.lang, refreshWordHighlights);
+    loadFormsData();
+    renderCard();
+  }
+
+  if (S.level === 'b') {
+    // Lazy-load the category file, then start
+    const code     = S.topic;
+    const safeCode = code.replace(/\//g, '_').replace(/ /g, '_');
+    if (window.FC_B && window.FC_B[code]) {
+      go();
+    } else {
+      loadScript(`../common_data/learning_cards/fc_b_${safeCode}.js`, go);
+    }
+  } else if (window.FLASHCARD_DATA) {
+    go();
+  } else {
+    loadScript('../common_data/learning_cards/flashcard_data.js', go);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ════════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  RENDER CARD
+// ════════════════════════════════════════════════════════════════
+function renderCard() {
+  closePopover();
+  stopSentenceAudio();   // stop any audio from the previous card
+  const word = S.words[S.idx];
+
+  // Pick card (meaning) deterministically
+  const cardRng = makePRNG((S.seed + S.idx * 1327) >>> 0);
+  S.cardIdx = Math.floor(cardRng() * word.cards.length);
+  const card = word.cards[S.cardIdx];
+  S.answered = false;
+
+  // Top-bar info
+  const levelLabels = { a1: 'A1', a2: 'A2', b: 'B+' };
+  document.getElementById('badge-level').textContent = levelLabels[S.level] || S.level.toUpperCase();
+  document.getElementById('badge-mode').textContent  = S.mode === 'mcq' ? 'MCQ' : 'Flashcard';
+  document.getElementById('badge-lang').textContent  = S.lang.toUpperCase();
+  const topicBadge = document.getElementById('badge-topic');
+  if (S.topic) {
+    // B+ label from FC_B_CATS, A1/A2 label from FC_CATS
+    const cats = S.level === 'b'
+      ? (window.FC_B_CATS && window.FC_B_CATS[S.topic] ? window.FC_B_CATS[S.topic].label : S.topic)
+      : (window.FC_CATS ? (window.FC_CATS[S.topic] || S.topic) : S.topic);
+    topicBadge.textContent = cats;
+    topicBadge.style.display = '';
+  } else {
+    topicBadge.style.display = 'none';
+  }
+  document.getElementById('progress-text').textContent = `${S.idx + 1} / ${S.words.length}`;
+  document.getElementById('pos-hint').textContent = word.pos.charAt(0).toUpperCase() + word.pos.slice(1);
+
+  // Score counters
+  const correct = S.scores.filter(v => v === true).length;
+  const wrong   = S.scores.filter(v => v === false).length;
+  document.getElementById('score-correct').textContent = `✓ ${correct}`;
+  document.getElementById('score-wrong').textContent   = `✗ ${wrong}`;
+
+  // Sentence
+  document.getElementById('sentence').innerHTML = buildSentenceHTML(card.example, word);
+
+  // Sentence audio
+  const sAudioBtn = document.getElementById('sentence-audio-btn');
+  if (card.audio) {
+    sAudioBtn.dataset.url   = card.audio;
+    sAudioBtn.dataset.state = '';
+    sAudioBtn.textContent   = '▶';
+    sAudioBtn.classList.remove('hidden');
+    // Auto-play 500ms after card loads so the beginning isn't clipped
+    _sentAudioTimer = setTimeout(playSentenceAudio, 500);
+  } else {
+    sAudioBtn.classList.add('hidden');
+  }
+
+  // Nav buttons
+  document.getElementById('prev-btn').disabled = S.idx === 0;
+  document.getElementById('next-btn').textContent = S.idx === S.words.length - 1 ? 'Finish →' : 'Next →';
+
+  if (S.mode === 'flashcard') showFlashcardUI(word, card);
+  else                         showMCQUI(word, card);
+
+  attachWordClicks();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SENTENCE HTML
+// ════════════════════════════════════════════════════════════════
+function buildSentenceHTML(parts, word) {
+  let html = '';
+  for (let i = 0; i < parts.length; i++) {
+    const p   = parts[i];
+    const sep = (i > 0 && !p.j) ? ' ' : '';
+    const txt = esc(p.c);
+
+    if (p.t === 'h') {
+      // Target word — clickable to open its popover
+      const key = word.lemma.toLowerCase();
+      html += sep + `<span class="w-target" data-key="${esc(key)}" data-id="${esc(word.id)}">${txt}</span>`;
+    } else {
+      const key = stripPunct(p.c);
+      html += sep + `<span class="w-word" data-key="${esc(key)}">${txt}</span>`;
+    }
+  }
+  return html;
+}
+
+function stripPunct(s) {
+  return s.toLowerCase()
+          .replace(/^[«"'(]+/, '')
+          .replace(/[,;:.!?»«"')]+$/, '')
+          .replace(/'/g, "'");
+}
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  WORD CLICK SETUP
+// ════════════════════════════════════════════════════════════════
+function revealTargetWord() {
+  document.querySelectorAll('.w-target').forEach(span => {
+    span.classList.add('revealed');
+    span.addEventListener('click', e => {
+      e.stopPropagation();
+      openPopoverFor(span.dataset.key, span.dataset.id, span);
+    });
+  });
+}
+
+function attachWordClicks() {
+  // Target words: NOT clickable before answer — just styled gray
+
+  // Regular words
+  document.querySelectorAll('.w-word').forEach(el => {
+    el.classList.remove('w-known');
+    const key = el.dataset.key;
+    if (key && lodData() && lodData()[key]) {
+      el.classList.add('w-known');
+    }
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const k = el.dataset.key;
+      const resolved = resolveKey(k);
+      if (!resolved) return;
+      openPopoverFor(resolved, null, el);
+    });
+  });
+}
+
+function refreshWordHighlights() {
+  document.querySelectorAll('.w-word').forEach(el => {
+    const key = el.dataset.key;
+    if (key && lodData() && lodData()[key]) el.classList.add('w-known');
+    else el.classList.remove('w-known');
+  });
+}
+
+function resolveKey(key) {
+  if (!key) return null;
+  const data = lodData();
+  if (!data) return null;
+  if (data[key]) return key;
+  if (window.LOD_FORMS) {
+    const base = window.LOD_FORMS[key] || window.LOD_FORMS[key.toLowerCase()];
+    if (base && data[base]) return base;
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  FLASHCARD UI
+// ════════════════════════════════════════════════════════════════
+function showFlashcardUI(word, card) {
+  el('reveal-btn').classList.remove('hidden');
+  el('answer-area').classList.remove('visible');
+  el('self-mark').classList.remove('visible');
+  el('mcq-options').classList.remove('visible');
+  el('mcq-next-btn').classList.remove('visible');
+
+  const meaning = (card.meaning || {})[S.lang] || (card.meaning || {}).en || '';
+  el('answer-lemma').textContent   = word.lemma;
+  el('answer-meaning').textContent = meaning;
+}
+
+function revealAnswer() {
+  el('reveal-btn').classList.add('hidden');
+  el('answer-area').classList.add('visible');
+  el('self-mark').classList.add('visible');
+  revealTargetWord();
+}
+
+function openTargetPopover(anchorEl) {
+  const word = S.words[S.idx];
+  openPopoverFor(word.lemma.toLowerCase(), word.id, anchorEl);
+}
+
+function markAnswer(correct) {
+  S.scores[S.idx] = correct;
+  S.answered = true;
+  advanceOrFinish();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  MCQ UI
+// ════════════════════════════════════════════════════════════════
+function showMCQUI(word, card) {
+  el('reveal-btn').classList.add('hidden');
+  el('answer-area').classList.remove('visible');
+  el('self-mark').classList.remove('visible');
+  el('mcq-next-btn').classList.remove('visible');
+
+  const opts = el('mcq-options');
+  opts.classList.add('visible');
+  opts.innerHTML = '';
+
+  const correct = (card.meaning || {})[S.lang] || (card.meaning || {}).en || '';
+  const choices = buildMCQChoices(word, correct, S.idx);
+
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className   = 'mcq-option';
+    btn.textContent = choice;
+    btn.addEventListener('click', () => handleMCQChoice(btn, choice, correct));
+    opts.appendChild(btn);
+  });
+}
+
+function buildMCQChoices(word, correctMeaning, wordIdx) {
+  const pool = S.words.filter(w => w.pos === word.pos && w !== word);
+  const distRng = makePRNG((S.seed + wordIdx * 9973 + 17389) >>> 0);
+  const shuffled = shuffle(pool, distRng);
+
+  const wrongs = [];
+  for (const w of shuffled) {
+    if (wrongs.length >= 3) break;
+    const cp = w.cards[Math.floor(distRng() * w.cards.length)];
+    const m  = (cp.meaning || {})[S.lang] || (cp.meaning || {}).en || '';
+    if (m && m !== correctMeaning && !wrongs.includes(m)) wrongs.push(m);
+  }
+
+  // Fallback: different POS if not enough same-POS words
+  if (wrongs.length < 3) {
+    const fb = shuffle(S.words.filter(w => w !== word), distRng);
+    for (const w of fb) {
+      if (wrongs.length >= 3) break;
+      const cp = w.cards[Math.floor(distRng() * w.cards.length)];
+      const m  = (cp.meaning || {})[S.lang] || (cp.meaning || {}).en || '';
+      if (m && m !== correctMeaning && !wrongs.includes(m)) wrongs.push(m);
+    }
+  }
+
+  const options = [correctMeaning, ...wrongs.slice(0, 3)];
+  return shuffle(options, makePRNG((S.seed + wordIdx * 3571 + 7919) >>> 0));
+}
+
+function handleMCQChoice(btn, chosen, correct) {
+  if (S.answered) return;
+  S.answered = true;
+  S.scores[S.idx] = (chosen === correct);
+
+  // Update score display immediately
+  const c = S.scores.filter(v => v === true).length;
+  const w = S.scores.filter(v => v === false).length;
+  el('score-correct').textContent = `✓ ${c}`;
+  el('score-wrong').textContent   = `✗ ${w}`;
+
+  // Mark all options: correct = green, chosen-wrong = red
+  document.querySelectorAll('.mcq-option').forEach(b => {
+    b.classList.add('locked');
+    if (b.textContent === correct) b.classList.add('is-correct');
+  });
+  if (chosen !== correct) btn.classList.add('is-wrong');
+
+  // Reveal target word in green
+  revealTargetWord();
+
+  // Show the "Next" button
+  const nextBtn = el('mcq-next-btn');
+  nextBtn.textContent = S.idx === S.words.length - 1 ? 'See results →' : 'Next →';
+  nextBtn.classList.add('visible');
+}
+
+function advanceFromMCQ() {
+  advanceOrFinish();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════════
+function navigate(dir) {
+  if (dir === 1 && !S.answered) S.scores[S.idx] = null; // skipped
+  const next = S.idx + dir;
+  if (next < 0) return;
+  if (next >= S.words.length) { finishGame(); return; }
+  S.idx = next;
+  renderCard();
+}
+
+function advanceOrFinish() {
+  if (S.idx === S.words.length - 1) finishGame();
+  else navigate(1);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  FINISH
+// ════════════════════════════════════════════════════════════════
+function finishGame() {
+  closePopover();
+  stopSentenceAudio();
+
+  const correct = S.scores.filter(v => v === true).length;
+  const wrong   = S.scores.filter(v => v === false).length;
+  const skipped = S.scores.filter(v => v === null).length;
+  const shown   = S.idx + 1;
+  const answered = correct + wrong;
+  const pct = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+  el('res-pct').textContent     = answered > 0 ? pct + '%' : '—';
+  el('res-correct').textContent = correct;
+  el('res-wrong').textContent   = wrong;
+  el('res-skipped').textContent = skipped;
+  el('res-total').textContent   = shown;
+
+  showScreen('results');
+}
+
+function replayGame() {
+  showScreen('setup');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  SENTENCE AUDIO
+// ════════════════════════════════════════════════════════════════
+let _sentAudio      = null;
+let _sentAudioTimer = null;
+
+function playSentenceAudio() {
+  const btn = el('sentence-audio-btn');
+  const url = btn.dataset.url;
+  if (!url) return;
+  if (_sentAudio) { _sentAudio.pause(); _sentAudio = null; }
+  _sentAudio = new Audio(url);
+  btn.dataset.state = 'loading'; btn.textContent = '…';
+  _sentAudio.addEventListener('canplay', () => { btn.dataset.state = 'playing'; btn.textContent = '■'; });
+  _sentAudio.addEventListener('ended',   () => { btn.dataset.state = ''; btn.textContent = '▶'; _sentAudio = null; });
+  _sentAudio.play().catch(() => {
+    btn.dataset.state = 'error'; btn.textContent = '✕';
+    setTimeout(() => { btn.dataset.state = ''; btn.textContent = '▶'; }, 2000);
+  });
+}
+
+function stopSentenceAudio() {
+  clearTimeout(_sentAudioTimer);
+  if (_sentAudio) { _sentAudio.pause(); _sentAudio = null; }
+  const btn = el('sentence-audio-btn');
+  btn.dataset.state = '';
+  btn.textContent   = '▶';
+}
+
+el('sentence-audio-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  clearTimeout(_sentAudioTimer);
+  const btn = el('sentence-audio-btn');
+  // Toggle: if already playing, stop
+  if (_sentAudio && btn.dataset.state === 'playing') {
+    stopSentenceAudio(); return;
+  }
+  playSentenceAudio();
+});
+
+// ════════════════════════════════════════════════════════════════
+//  POPOVER  (reader-style: homonym nav, audio, LOD link)
+// ════════════════════════════════════════════════════════════════
+const MAX_SHOWN = 5;
+
+const POS_LABELS = {
+  en: { NOUN:'Noun', VERB:'Verb', ADJ:'Adjective', ADV:'Adverb', PREP:'Preposition', CONJ:'Conjunction', PRON:'Pronoun', INTERJ:'Interjection', NB:'Number', ART:'Article', PART:'Particle' },
+  fr: { NOUN:'Nom',  VERB:'Verbe', ADJ:'Adjectif', ADV:'Adverbe', PREP:'Préposition', CONJ:'Conjonction', PRON:'Pronom', INTERJ:'Interjection', NB:'Numéral', ART:'Article', PART:'Particule' },
+};
+function posLabel(code) {
+  return (POS_LABELS[S.lang] || POS_LABELS.en)[code] || code || '';
+}
+
+let _popEntries = [];
+let _popIdx     = 0;
+let _popAnchor  = null;
+let _popAudio   = null;
+
+function openPopoverFor(key, startId, anchorEl) {
+  const data = lodData();
+  if (!data) {
+    // LOD not loaded yet — try loading then reopen
+    loadLodData(S.lang, () => openPopoverFor(key, startId, anchorEl));
+    return;
+  }
+  const raw = data[key];
+  if (!raw) return;
+  const entries = Array.isArray(raw) ? raw : [raw];
+  if (!entries.length) return;
+
+  _popEntries = entries;
+  _popIdx = startId ? Math.max(0, entries.findIndex(e => e.id === startId)) : 0;
+  _popAnchor = anchorEl;
+
+  positionPopover(anchorEl);
+  renderPopEntry();
+}
+
+function renderPopEntry() {
+  const entry = _popEntries[_popIdx];
+  const total = _popEntries.length;
+
+  el('popLemma').textContent = entry.lemma || '';
+  el('popPos').textContent   = posLabel(entry.pos);
+
+  let meta = '';
+  if ('pl' in entry) meta = entry.pl != null ? `pl. ${entry.pl}` : (S.lang === 'fr' ? 'sans pluriel' : 'no plural');
+  else if (entry.aux) meta = `aux. ${entry.aux}`;
+  el('popMeta').textContent = meta;
+
+  // Homonym nav
+  if (total > 1) {
+    el('popNavLabel').textContent = `${_popIdx + 1}/${total}`;
+    el('popNav').classList.add('visible');
+  } else {
+    el('popNav').classList.remove('visible');
+  }
+
+  // Audio (word pronunciation)
+  if (_popAudio) { _popAudio.pause(); _popAudio = null; }
+  const audioBtn = el('popAudioBtn');
+  audioBtn.dataset.url   = `https://lod.lu/uploads/AAC/${entry.id}.m4a`;
+  audioBtn.dataset.state = '';
+  audioBtn.textContent   = '▶';
+
+  // LOD link
+  el('popLodLink').href = `https://lod.lu/artikel/${entry.id.toUpperCase()}`;
+
+  // Meanings
+  const items = entry.m || [];
+  if (!items.length) {
+    el('popBody').innerHTML = '<p class="pop-no-meaning">No meaning available.</p>';
+  } else {
+    const visible = items.slice(0, MAX_SHOWN);
+    const hidden  = items.slice(MAX_SHOWN);
+    const rows = visible.map((m, i) =>
+      `<li><span class="meaning-num">${items.length > 1 ? (i+1)+'.' : ''}</span>${esc(m)}</li>`
+    ).join('');
+    const more = hidden.length
+      ? `<button class="meaning-more" id="meaningMore">+ ${hidden.length} more</button>` : '';
+    el('popBody').innerHTML = `<ul class="meaning-list" id="meaningList">${rows}</ul>${more}`;
+    if (hidden.length) {
+      el('meaningMore').addEventListener('click', function(e) {
+        e.stopPropagation();
+        hidden.forEach((m, i) => {
+          const li = document.createElement('li');
+          li.innerHTML = `<span class="meaning-num">${visible.length+i+1}.</span>${esc(m)}`;
+          el('meaningList').appendChild(li);
+        });
+        this.remove();
+        repositionPopover(_popAnchor);
+      });
+    }
+  }
+
+  repositionPopover(_popAnchor);
+}
+
+// Homonym navigation
+el('popPrev').addEventListener('click', e => {
+  e.stopPropagation();
+  if (_popEntries.length < 2) return;
+  _popIdx = (_popIdx - 1 + _popEntries.length) % _popEntries.length;
+  renderPopEntry();
+});
+el('popNext').addEventListener('click', e => {
+  e.stopPropagation();
+  if (_popEntries.length < 2) return;
+  _popIdx = (_popIdx + 1) % _popEntries.length;
+  renderPopEntry();
+});
+
+// Audio in popover
+el('popAudioBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  const btn = el('popAudioBtn');
+  const url = btn.dataset.url;
+  if (!url) return;
+  if (_popAudio) {
+    _popAudio.pause(); _popAudio = null;
+    if (btn.dataset.state === 'playing') { btn.dataset.state = ''; btn.textContent = '▶'; return; }
+  }
+  _popAudio = new Audio(url);
+  btn.dataset.state = 'loading'; btn.textContent = '…';
+  _popAudio.addEventListener('canplay', () => { btn.dataset.state = 'playing'; btn.textContent = '■'; });
+  _popAudio.addEventListener('ended',   () => { btn.dataset.state = ''; btn.textContent = '▶'; _popAudio = null; });
+  _popAudio.play().catch(() => { btn.dataset.state = 'error'; btn.textContent = '✕'; setTimeout(() => { btn.dataset.state = ''; btn.textContent = '▶'; }, 2000); });
+});
+
+el('popClose').addEventListener('click', closePopover);
+
+function positionPopover(anchorEl) {
+  const pop = el('popover');
+  pop.style.visibility = 'hidden';
+  pop.style.display    = 'block';
+  const ph = pop.offsetHeight, pw = pop.offsetWidth || 290;
+  pop.style.display    = 'none';
+  pop.style.visibility = '';
+
+  const rect = anchorEl.getBoundingClientRect();
+  const mg   = 8;
+  let left = rect.left;
+  if (left + pw > window.innerWidth - mg)  left = window.innerWidth - pw - mg;
+  if (left < mg) left = mg;
+  let top = rect.bottom + mg;
+  if (top + ph > window.innerHeight - mg) top = rect.top - ph - mg;
+  if (top < mg) top = mg;
+
+  pop.style.left    = left + 'px';
+  pop.style.top     = top  + 'px';
+  pop.style.display = 'block';
+}
+
+function repositionPopover(anchorEl) {
+  if (el('popover').style.display !== 'none') positionPopover(anchorEl || _popAnchor);
+}
+
+function closePopover() {
+  if (_popAudio) { _popAudio.pause(); _popAudio = null; }
+  const btn = el('popAudioBtn');
+  btn.dataset.state = ''; btn.textContent = '▶';
+  el('popover').style.display = 'none';
+  _popEntries = [];
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DEFAULT SELECTIONS (so Start is enabled immediately)
+// ════════════════════════════════════════════════════════════════
+(function initDefaults() {
+  const defaults = { lang: 'en', level: 'a1', mode: 'flashcard' };
+  for (const [group, value] of Object.entries(defaults)) {
+    const btn = document.querySelector(`#${group}-opts .opt-btn[data-value="${value}"]`);
+    if (btn) {
+      btn.classList.add('selected');
+      S[group] = value;
+    }
+  }
+  updateTopicOptions();
+  checkStartReady();
+})();
+
+document.addEventListener('click', e => {
+  const pop = el('popover');
+  if (pop.style.display === 'none') return;
+  if (!pop.contains(e.target) &&
+      !e.target.classList.contains('w-target') &&
+      !e.target.classList.contains('w-known') &&
+      !e.target.classList.contains('answer-lemma')) {
+    closePopover();
+  }
+});
+
+// ════════════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════════════
+function el(id) { return document.getElementById(id); }
+</script>
+</body>
+</html>
