@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Learning Cards — Lëtzebuergesch</title>
+<title>Flashcards — Lëtzebuergesch</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -258,6 +258,15 @@ nav .sep { opacity: 0.4; }
 .mcq-option.is-correct { border-color: var(--accent) !important; background: var(--accent-lt) !important; color: var(--accent); font-weight: 600; }
 .mcq-option.is-wrong   { border-color: var(--danger) !important; background: var(--danger-lt) !important; color: var(--danger); }
 
+/* External links bar (shown after answer reveal) */
+.card-links {
+  display: flex; gap: 1.2rem; flex-wrap: wrap;
+  font-size: 0.78rem; font-family: var(--mono); margin-top: 0.2rem;
+}
+.card-links.hidden { display: none; }
+.card-link { color: var(--accent); text-decoration: none; }
+.card-link:hover { text-decoration: underline; }
+
 /* MCQ next button (appears after answering) */
 .mcq-next-btn {
   display: none; align-self: flex-end;
@@ -425,9 +434,9 @@ nav .sep { opacity: 0.4; }
 <body>
 
 <nav>
-  <a href="https://krishnans14.github.io/luxembourgish/index.html">Lëtzebuergesch</a>
+  <a href="../index.html">Lëtzebuergesch</a>
   <span class="sep">/</span>
-  <span>Learning Cards</span>
+  <span>Flashcards</span>
 </nav>
 
 <!-- ═══════════ SETUP ═══════════ -->
@@ -457,11 +466,11 @@ nav .sep { opacity: 0.4; }
       <div class="option-row" id="level-opts">
         <button class="opt-btn" data-value="a1" onclick="selectOpt(this,'level')">
           <span class="opt-name">A1</span>
-          <span class="opt-desc">Beginner · 691 words</span>
+          <span class="opt-desc">Beginner · 680 words</span>
         </button>
         <button class="opt-btn" data-value="a2" onclick="selectOpt(this,'level')">
           <span class="opt-name">A2</span>
-          <span class="opt-desc">A1 + A2 · 1,656 words</span>
+          <span class="opt-desc">A1 + A2 · 1,637 words</span>
         </button>
         <button class="opt-btn" data-value="b" onclick="selectOpt(this,'level')">
           <span class="opt-name">B+</span>
@@ -538,6 +547,9 @@ nav .sep { opacity: 0.4; }
         <button class="mark-btn correct" onclick="markAnswer(true)">✓ Got it</button>
         <button class="mark-btn wrong"   onclick="markAnswer(false)">✗ Missed it</button>
       </div>
+
+      <!-- External links: LOD + Google Translate (shown after reveal) -->
+      <div class="card-links hidden" id="card-links"></div>
 
       <!-- MCQ -->
       <div class="mcq-options" id="mcq-options"></div>
@@ -660,8 +672,10 @@ function selectOpt(btn, group) {
 
 function checkStartReady() {
   const topicRequired = S.level === 'b';
+  // A1/A2 pools live in FLASHCARD_DATA — require it to be loaded before enabling Start
+  const dataReady = S.level === 'b' || !!window.FLASHCARD_DATA;
   document.getElementById('start-btn').disabled =
-    !(S.lang && S.level && S.mode && (!topicRequired || S.topic));
+    !(S.lang && S.level && S.mode && (!topicRequired || S.topic) && dataReady);
 }
 
 function selectTopic(value) {
@@ -726,6 +740,8 @@ function updateTopicOptions() {
     });
     group.style.display = usable.length > 0 ? 'block' : 'none';
   }
+  // Re-evaluate Start readiness now that data may have just loaded
+  checkStartReady();
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -982,10 +998,31 @@ function showFlashcardUI(word, card) {
   el('self-mark').classList.remove('visible');
   el('mcq-options').classList.remove('visible');
   el('mcq-next-btn').classList.remove('visible');
+  el('card-links').classList.add('hidden');
 
   const meaning = (card.meaning || {})[S.lang] || (card.meaning || {}).en || '';
   el('answer-lemma').textContent   = word.lemma;
   el('answer-meaning').textContent = meaning;
+}
+
+function examplePlainText(tokens) {
+  let s = '';
+  for (const tok of (tokens || [])) {
+    s += (tok.j && s ? '' : s ? ' ' : '') + tok.c;
+  }
+  return s.trim();
+}
+
+function showCardLinks(word, card) {
+  const sentence = examplePlainText(card.example);
+  const tl  = S.lang === 'fr' ? 'fr' : 'en';
+  const gt  = `https://translate.google.com/?sl=lb&tl=${tl}&text=${encodeURIComponent(sentence)}&op=translate`;
+  const lod = `https://lod.lu/artikel/${word.id.toUpperCase()}`;
+  const div = el('card-links');
+  div.innerHTML =
+    `<a class="card-link" href="${lod}" target="_blank" rel="noopener">Open in LOD ↗</a>` +
+    `<a class="card-link" href="${gt}"  target="_blank" rel="noopener">Translate sentence ↗</a>`;
+  div.classList.remove('hidden');
 }
 
 function revealAnswer() {
@@ -993,6 +1030,8 @@ function revealAnswer() {
   el('answer-area').classList.add('visible');
   el('self-mark').classList.add('visible');
   revealTargetWord();
+  const word = S.words[S.idx];
+  showCardLinks(word, word.cards[S.cardIdx]);
 }
 
 function openTargetPopover(anchorEl) {
@@ -1014,6 +1053,7 @@ function showMCQUI(word, card) {
   el('answer-area').classList.remove('visible');
   el('self-mark').classList.remove('visible');
   el('mcq-next-btn').classList.remove('visible');
+  el('card-links').classList.add('hidden');
 
   const opts = el('mcq-options');
   opts.classList.add('visible');
@@ -1079,6 +1119,10 @@ function handleMCQChoice(btn, chosen, correct) {
 
   // Reveal target word in green
   revealTargetWord();
+
+  // Show external links
+  const word = S.words[S.idx];
+  showCardLinks(word, word.cards[S.cardIdx]);
 
   // Show the "Next" button
   const nextBtn = el('mcq-next-btn');
@@ -1338,22 +1382,6 @@ function closePopover() {
   el('popover').style.display = 'none';
   _popEntries = [];
 }
-
-// ════════════════════════════════════════════════════════════════
-//  DEFAULT SELECTIONS (so Start is enabled immediately)
-// ════════════════════════════════════════════════════════════════
-(function initDefaults() {
-  const defaults = { lang: 'en', level: 'a1', mode: 'flashcard' };
-  for (const [group, value] of Object.entries(defaults)) {
-    const btn = document.querySelector(`#${group}-opts .opt-btn[data-value="${value}"]`);
-    if (btn) {
-      btn.classList.add('selected');
-      S[group] = value;
-    }
-  }
-  updateTopicOptions();
-  checkStartReady();
-})();
 
 document.addEventListener('click', e => {
   const pop = el('popover');
