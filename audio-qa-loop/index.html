@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio-QA-Loop</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Audio-Question-Answer-Loop</h1>
+  <p class="subtitle">Record spoken prompts and insert spoken responses — everything stays in your browser.</p>
+</header>
+
+<div id="encoder-banner" class="banner hidden"></div>
+<div id="unsupported-banner" class="banner hidden"></div>
+
+<nav class="tabs" role="tablist">
+  <button id="tab-btn-record" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-record">1 · Record Prompt</button>
+  <button id="tab-btn-insert" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-insert">2 · Insert Response</button>
+</nav>
+
+<!-- ============ TAB 1: RECORD PROMPT ============ -->
+<section id="tab-record" class="tab-panel" role="tabpanel">
+  <p class="help">Record your questions as one take. Use <strong>Pause Recording</strong> to think between questions — paused time is not recorded and does not count against the limit. Leave a pause of a second or more between questions.</p>
+
+  <div class="timer-row">
+    <span id="rec1-timer" class="timer">0:00</span>
+    <span class="timer-cap">/ <span id="rec1-cap"></span> max</span>
+    <span id="rec1-state" class="state-badge idle">Ready</span>
+  </div>
+
+  <div class="controls">
+    <button id="rec1-start" class="btn primary">● Start Recording</button>
+    <button id="rec1-pause" class="btn hidden">⏸ Pause Recording</button>
+    <button id="rec1-stop" class="btn danger hidden">■ Stop Recording</button>
+  </div>
+
+  <div id="rec1-processing" class="processing hidden">
+    <span class="spinner"></span> Processing… <span id="rec1-progress"></span>
+  </div>
+
+  <div id="rec1-result" class="result hidden">
+    <h3>Your recording</h3>
+    <p class="help">Listen to verify, then download. The file only exists in this browser tab until you download it.</p>
+    <audio id="rec1-audio" controls></audio>
+    <div class="controls">
+      <button id="rec1-download" class="btn primary">⬇ Download MP3</button>
+      <button id="rec1-discard" class="btn">Discard</button>
+    </div>
+  </div>
+
+  <p id="rec1-error" class="error hidden"></p>
+</section>
+
+<!-- ============ TAB 2: INSERT RESPONSE ============ -->
+<section id="tab-insert" class="tab-panel hidden" role="tabpanel">
+  <p class="help">Upload an audio file, play it, pause where you want to respond, and record your response there. Repeat for as many points as you like, then merge everything into one file.</p>
+  <p class="help advisory">For best audio quality, we recommend keeping this exchange to a few rounds.</p>
+
+  <div class="upload-row">
+    <label class="btn primary file-label">
+      📁 Upload Audio File
+      <input type="file" id="ins-file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm" hidden>
+    </label>
+    <span id="ins-filename" class="filename"></span>
+  </div>
+
+  <div id="ins-player-section" class="hidden">
+    <h3>Playback</h3>
+    <p class="help">Pause playback at the moment you want your response inserted, then press <strong>Record Response</strong>.</p>
+    <audio id="ins-audio" controls></audio>
+
+    <div class="controls">
+      <button id="ins-record" class="btn primary">● Record Response at <span id="ins-record-at">0:00</span></button>
+    </div>
+
+    <div id="ins-recording-ui" class="recording-box hidden">
+      <div class="timer-row">
+        <span id="rec2-timer" class="timer">0:00</span>
+        <span class="timer-cap" id="rec2-remaining"></span>
+        <span id="rec2-state" class="state-badge recording">Recording</span>
+      </div>
+      <div class="controls">
+        <button id="rec2-pause" class="btn">⏸ Pause Recording</button>
+        <button id="rec2-stop" class="btn danger">■ Stop Recording</button>
+        <button id="rec2-cancel" class="btn">✕ Cancel</button>
+      </div>
+    </div>
+
+    <div id="ins-list-section" class="hidden">
+      <h3>Pending responses</h3>
+      <ul id="ins-list" class="insert-list"></ul>
+    </div>
+
+    <div class="controls">
+      <button id="ins-complete" class="btn primary hidden">✔ Complete — Merge &amp; Create File</button>
+    </div>
+
+    <div id="ins-processing" class="processing hidden">
+      <span class="spinner"></span> Processing… <span id="ins-progress"></span>
+    </div>
+
+    <div id="ins-result" class="result hidden">
+      <h3>Merged file</h3>
+      <p class="help">Listen to verify, then download. The file only exists in this browser tab until you download it.</p>
+      <audio id="ins-result-audio" controls></audio>
+      <div class="controls">
+        <button id="ins-download" class="btn primary">⬇ Download MP3</button>
+        <button id="ins-reset" class="btn">Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <p id="ins-error" class="error hidden"></p>
+</section>
+
+<footer>
+  <p>Runs entirely in your browser — no audio ever leaves your device. Share downloaded files by email, chat, or a shared drive.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
