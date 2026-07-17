@@ -8,45 +8,77 @@
 </head>
 <body>
 <header>
-  <h1>Audio-Question-Answer-Loop</h1>
-  <p class="subtitle">Record spoken prompts and insert spoken responses — everything stays in your browser.</p>
+  <div class="header-top">
+    <h1>Audio-Question-Answer-Loop</h1>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button id="lang-en" class="lang-btn active">EN</button>
+      <button id="lang-fr" class="lang-btn">FR</button>
+    </div>
+  </div>
+  <p class="subtitle" data-i18n="app.subtitle"></p>
 </header>
 
 <div id="encoder-banner" class="banner hidden"></div>
 <div id="unsupported-banner" class="banner hidden"></div>
 
 <nav class="tabs" role="tablist">
-  <button id="tab-btn-record" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-record">1 · Record Prompt</button>
-  <button id="tab-btn-insert" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-insert">2 · Insert Response</button>
+  <button id="tab-btn-home" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-home" data-i18n="tab.home"></button>
+  <button id="tab-btn-record" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-record" data-i18n="tab.record"></button>
+  <button id="tab-btn-insert" class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-insert" data-i18n="tab.insert"></button>
 </nav>
 
+<!-- ============ HOME / WELCOME ============ -->
+<section id="tab-home" class="tab-panel" role="tabpanel">
+  <h2 data-i18n="home.title"></h2>
+  <p class="help" data-i18n="home.intro"></p>
+
+  <ol class="workflow">
+    <li data-i18n-html="home.step1"></li>
+    <li data-i18n-html="home.step2"></li>
+    <li data-i18n-html="home.step3"></li>
+  </ol>
+
+  <div class="home-cards">
+    <div class="home-card">
+      <h3 data-i18n="home.card1.title"></h3>
+      <p data-i18n="home.card1.text"></p>
+      <button id="home-go-record" class="btn primary" data-i18n="home.card1.btn"></button>
+    </div>
+    <div class="home-card">
+      <h3 data-i18n="home.card2.title"></h3>
+      <p data-i18n="home.card2.text"></p>
+      <button id="home-go-insert" class="btn primary" data-i18n="home.card2.btn"></button>
+    </div>
+  </div>
+</section>
+
 <!-- ============ TAB 1: RECORD PROMPT ============ -->
-<section id="tab-record" class="tab-panel" role="tabpanel">
-  <p class="help">Record your questions as one take. Use <strong>Pause Recording</strong> to think between questions — paused time is not recorded and does not count against the limit. Leave a pause of a second or more between questions.</p>
+<section id="tab-record" class="tab-panel hidden" role="tabpanel">
+  <p class="help" data-i18n-html="rec.help"></p>
 
   <div class="timer-row">
     <span id="rec1-timer" class="timer">0:00</span>
-    <span class="timer-cap">/ <span id="rec1-cap"></span> max</span>
-    <span id="rec1-state" class="state-badge idle">Ready</span>
+    <span class="timer-cap">/ <span id="rec1-cap"></span> <span data-i18n="max"></span></span>
+    <span id="rec1-state" class="state-badge idle"></span>
   </div>
 
   <div class="controls">
-    <button id="rec1-start" class="btn primary">● Start Recording</button>
-    <button id="rec1-pause" class="btn hidden">⏸ Pause Recording</button>
-    <button id="rec1-stop" class="btn danger hidden">■ Stop Recording</button>
+    <button id="rec1-start" class="btn primary"></button>
+    <button id="rec1-pause" class="btn hidden"></button>
+    <button id="rec1-stop" class="btn danger hidden" data-i18n="btn.stop"></button>
   </div>
 
   <div id="rec1-processing" class="processing hidden">
-    <span class="spinner"></span> Processing… <span id="rec1-progress"></span>
+    <span class="spinner"></span> <span data-i18n="processing"></span> <span id="rec1-progress"></span>
   </div>
 
   <div id="rec1-result" class="result hidden">
-    <h3>Your recording</h3>
-    <p class="help">Listen to verify, then download. The file only exists in this browser tab until you download it.</p>
+    <h3 data-i18n="rec.result.title"></h3>
+    <p class="help" data-i18n="verify.help"></p>
     <audio id="rec1-audio" controls></audio>
     <div class="controls">
-      <button id="rec1-download" class="btn primary">⬇ Download MP3</button>
-      <button id="rec1-discard" class="btn">Discard</button>
+      <button id="rec1-download" class="btn primary" data-i18n="btn.download"></button>
+      <button id="rec1-discard" class="btn" data-i18n="btn.discard"></button>
     </div>
   </div>
 
@@ -55,68 +87,69 @@
 
 <!-- ============ TAB 2: INSERT RESPONSE ============ -->
 <section id="tab-insert" class="tab-panel hidden" role="tabpanel">
-  <p class="help">Upload an audio file, play it, pause where you want to respond, and record your response there. Repeat for as many points as you like, then merge everything into one file.</p>
-  <p class="help advisory">For best audio quality, we recommend keeping this exchange to a few rounds.</p>
+  <p class="help" data-i18n-html="ins.help"></p>
+  <p class="help advisory" data-i18n="ins.advisory"></p>
 
   <div class="upload-row">
     <label class="btn primary file-label">
-      📁 Upload Audio File
+      <span data-i18n="ins.upload"></span>
       <input type="file" id="ins-file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.webm" hidden>
     </label>
     <span id="ins-filename" class="filename"></span>
   </div>
 
   <div id="ins-player-section" class="hidden">
-    <h3>Playback</h3>
-    <p class="help">Pause playback at the moment you want your response inserted, then press <strong>Record Response</strong>.</p>
+    <h3 data-i18n="ins.playback.title"></h3>
+    <p class="help" data-i18n-html="ins.playback.help"></p>
     <audio id="ins-audio" controls></audio>
 
     <div class="controls">
-      <button id="ins-record" class="btn primary">● Record Response at <span id="ins-record-at">0:00</span></button>
+      <button id="ins-record" class="btn primary"><span data-i18n="ins.record"></span> <span id="ins-record-at">0:00</span></button>
     </div>
 
     <div id="ins-recording-ui" class="recording-box hidden">
       <div class="timer-row">
         <span id="rec2-timer" class="timer">0:00</span>
         <span class="timer-cap" id="rec2-remaining"></span>
-        <span id="rec2-state" class="state-badge recording">Recording</span>
+        <span id="rec2-state" class="state-badge recording"></span>
       </div>
       <div class="controls">
-        <button id="rec2-pause" class="btn">⏸ Pause Recording</button>
-        <button id="rec2-stop" class="btn danger">■ Stop Recording</button>
-        <button id="rec2-cancel" class="btn">✕ Cancel</button>
+        <button id="rec2-pause" class="btn"></button>
+        <button id="rec2-stop" class="btn danger" data-i18n="btn.stop"></button>
+        <button id="rec2-cancel" class="btn" data-i18n="btn.cancel"></button>
       </div>
     </div>
 
-    <div id="ins-list-section" class="hidden">
-      <h3>Pending responses</h3>
-      <ul id="ins-list" class="insert-list"></ul>
-    </div>
-
+    <!-- Merge action + result live ABOVE the recordings list -->
     <div class="controls">
-      <button id="ins-complete" class="btn primary hidden">✔ Complete — Merge &amp; Create File</button>
+      <button id="ins-complete" class="btn primary hidden" data-i18n="ins.merge.btn"></button>
     </div>
 
     <div id="ins-processing" class="processing hidden">
-      <span class="spinner"></span> Processing… <span id="ins-progress"></span>
+      <span class="spinner"></span> <span data-i18n="processing"></span> <span id="ins-progress"></span>
     </div>
 
     <div id="ins-result" class="result hidden">
-      <h3>Merged file</h3>
-      <p class="help">Listen to verify, then download. The file only exists in this browser tab until you download it.</p>
+      <h3 data-i18n="ins.result.title"></h3>
+      <p class="help" data-i18n="verify.help"></p>
       <audio id="ins-result-audio" controls></audio>
       <div class="controls">
-        <button id="ins-download" class="btn primary">⬇ Download MP3</button>
-        <button id="ins-reset" class="btn">Start Over</button>
+        <button id="ins-download" class="btn primary" data-i18n="btn.download"></button>
+        <button id="ins-reset" class="btn" data-i18n="btn.startover"></button>
       </div>
     </div>
+
+    <details id="ins-list-section" class="hidden">
+      <summary><span data-i18n="ins.pending"></span> (<span id="ins-count">0</span>)</summary>
+      <ul id="ins-list" class="insert-list"></ul>
+    </details>
   </div>
 
   <p id="ins-error" class="error hidden"></p>
 </section>
 
 <footer>
-  <p>Runs entirely in your browser — no audio ever leaves your device. Share downloaded files by email, chat, or a shared drive.</p>
+  <p data-i18n="footer"></p>
 </footer>
 
 <script src="app.js"></script>

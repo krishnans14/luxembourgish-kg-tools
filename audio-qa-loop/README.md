@@ -4,11 +4,13 @@ A static, offline-first web app for exchanging spoken questions and answers betw
 
 Built to the design in [`audio-interface-spec.md`](audio-interface-spec.md).
 
+The interface is available in **English and French** — use the EN/FR toggle at the top right (the choice is remembered). A **Home tab** explains the workflow and points first-time users to the right tab.
+
 ## The two tabs
 
 **Record Prompt** — the teacher records a set of questions as a single take. Pause/Resume lets you think between questions without recording dead air; paused time doesn't count against the 7-minute cap. Stop, listen to verify, download as mp3.
 
-**Insert Response** — upload any audio file (the prompt, or a previously merged exchange), play it, pause at the point you want to respond, and press *Record Response*. Each response is added to a pending list (with preview and delete) at its timestamp. Press *Complete* to merge everything into one mp3, capped at 20 minutes total. This tab is role-agnostic: students use it to answer, teachers reuse it to add follow-up comments.
+**Insert Response** — upload any audio file (the prompt, or a previously merged exchange), play it, pause at the point you want to respond, and press *Record Response*. Recorded responses collect in a collapsible list (newest first, each with preview and delete), and the *Merge & Create File* button sits above the list so it's always in reach. Merging produces one mp3, capped at 20 minutes total. This tab is role-agnostic: students use it to answer, teachers reuse it to add follow-up comments.
 
 ## Running it
 
